@@ -1,5 +1,5 @@
 # 使用local pv
-kubeclt apply -f rocketmq-storage.yaml
+kubeclt apply -f local-path-storage.yaml
 # 部署rocketmq控制器
 sh ./rocketmq-operator/install-operator.sh
 # 部署rocketmq集群(1组broker)
