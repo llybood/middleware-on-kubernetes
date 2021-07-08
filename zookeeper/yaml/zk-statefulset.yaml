@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: zk
+  namespace: zookeeper
+spec:
+  selector:
+    matchLabels:
+      app: zk
+  serviceName: zk-hs
+  replicas: 3
+  updateStrategy:
+    type: RollingUpdate
+  podManagementPolicy: OrderedReady
+  template:
+    metadata:
+      labels:
+        app: zk
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: "app"
+                    operator: In
+                    values:
+                    - zk
+              topologyKey: "kubernetes.io/hostname"
+      containers:
+      - name: zookeeper
+        imagePullPolicy: Always
+        image: "registry.cn-beijing.aliyuncs.com/basetools/zookeeper:3.6.3-k8s"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "0.5"
+        ports:
+        - containerPort: 2181
+          name: client
+        - containerPort: 2888
+          name: server
+        - containerPort: 3888
+          name: leader-election
+        env:
+        - name: TZ
+          value: "Asia/Shanghai"
+        - name: ZK_CLIENT_PORT
+          value: "2181"
+        - name: ZK_SERVER_PORT
+          value: "2888"
+        - name: ZK_ELECTION_PORT
+          value: "3888"
+        - name: ZOO_DATA_DIR
+          value: "/var/lib/zookeeper/data"
+        - name: ZOO_LOG_DIR
+          value: "/var/lib/zookeeper/logs"
+        - name: ZOO_DATA_LOG_DIR
+          value: "/var/lib/zookeeper/datalog"
+        - name: ZOO_TICK_TIME
+          value: "2000"
+        - name: ZOO_INIT_LIMIT
+          value: "10"
+        - name: ZOO_SYNC_LIMIT
+          value: "5"
+        - name: ZOO_MAX_CLIENT_CNXNS
+          value: "60"
+        - name: ZOO_AUTOPURGE_PURGEINTERVAL
+          value: "0"
+        - name: ZOO_AUTOPURGE_SNAPRETAINCOUNT
+          value: "3"
+        - name: ZOO_4LW_COMMANDS_WHITELIST
+          value: "stat, ruok, conf, isro, mntr"
+        - name: ZK_SERVER_HEAP
+          value: "1000"
+        - name: ZOO_LOG4J_PROP
+          value: "INFO,ROLLINGFILE"
+        command:
+        - sh
+        - -c
+        - zkGenConfig.sh && zkServer.sh start-foreground
+        readinessProbe:
+          exec:
+            command:
+            - "zkOk.sh"
+          initialDelaySeconds: 10
+          timeoutSeconds: 5
+        livenessProbe:
+          exec:
+            command:
+            - "zkOk.sh"
+          initialDelaySeconds: 10
+          timeoutSeconds: 5
+        volumeMounts:
+        - name: datadir
+          mountPath: /var/lib/zookeeper
+      securityContext:
+        runAsUser: 1000
+        fsGroup: 1000
+  volumeClaimTemplates:
+  - metadata:
+      name: datadir
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: local-path-storage
+      resources:
+        requests:
+          storage: 10Gi
