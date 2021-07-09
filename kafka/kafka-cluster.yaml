@@ -6,6 +6,16 @@ spec:
   kafka:
     version: 2.8.0
     replicas: 3
+    resources:
+      requests:
+        memory: 4Gi
+        cpu: "2"
+      limits:
+        memory: 4Gi
+        cpu: "4"
+    jvmOptions:
+      -Xms: 2048m
+      -Xmx: 2048m
     template:
       pod:
         affinity:
@@ -46,6 +56,16 @@ spec:
       deleteClaim: false
   zookeeper:
     replicas: 3
+    resources:
+      requests:
+        memory: 2Gi
+        cpu: "1"
+      limits:
+        memory: 2Gi
+        cpu: "2"
+    jvmOptions:
+      -Xms: 1024m
+      -Xmx: 1024m
     template:
       pod:
         affinity:
