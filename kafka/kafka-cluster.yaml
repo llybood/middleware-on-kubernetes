@@ -6,6 +6,18 @@ spec:
   kafka:
     version: 2.8.0
     replicas: 3
+    template:
+      pod:
+        affinity:
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                    - key: "strimzi.io/name"
+                      operator: In
+                      values:
+                        - my-cluster-kafka
+                topologyKey: "kubernetes.io/hostname"
     listeners:
       - name: plain
         port: 9092
@@ -15,6 +27,12 @@ spec:
         port: 9093
         type: internal
         tls: true
+    livenessProbe:
+      initialDelaySeconds: 15
+      timeoutSeconds: 5
+    readinessProbe:
+      initialDelaySeconds: 15
+      timeoutSeconds: 5
     config:
       offsets.topic.replication.factor: 3
       transaction.state.log.replication.factor: 3
@@ -28,6 +46,24 @@ spec:
       deleteClaim: false
   zookeeper:
     replicas: 3
+    template:
+      pod:
+        affinity:
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                    - key: "strimzi.io/name"
+                      operator: In
+                      values:
+                        - my-cluster-zookeeper
+                topologyKey: "kubernetes.io/hostname"
+    livenessProbe:
+      initialDelaySeconds: 15
+      timeoutSeconds: 5
+    readinessProbe:
+      initialDelaySeconds: 15
+      timeoutSeconds: 5
     storage:
       type: persistent-claim
       class: local-path-storage
