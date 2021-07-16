@@ -1,21 +1,22 @@
 apiVersion: kafka.strimzi.io/v1beta2
 kind: Kafka
 metadata:
-  name: my-cluster
+  name: kafka-cluster
 spec:
   kafka:
+    image: quay.io/strimzi/kafka:0.24.0-kafka-2.8.0
     version: 2.8.0
     replicas: 3
     resources:
       requests:
-        memory: 4Gi
-        cpu: "2"
+        memory: 1Gi
+        cpu: 200m
       limits:
-        memory: 4Gi
-        cpu: "4"
+        memory: 2Gi
+        cpu: 400m
     jvmOptions:
-      -Xms: 2048m
-      -Xmx: 2048m
+      -Xms: 1024m
+      -Xmx: 1024m
     template:
       pod:
         affinity:
@@ -26,7 +27,7 @@ spec:
                     - key: "strimzi.io/name"
                       operator: In
                       values:
-                        - my-cluster-kafka
+                        - kafka-cluster-kafka
                 topologyKey: "kubernetes.io/hostname"
     listeners:
       - name: plain
@@ -55,14 +56,15 @@ spec:
       size: 10Gi
       deleteClaim: false
   zookeeper:
+    image: quay.io/strimzi/kafka:0.24.0-kafka-2.8.0
     replicas: 3
     resources:
       requests:
-        memory: 2Gi
-        cpu: "1"
+        memory: 1Gi
+        cpu: 200m
       limits:
         memory: 2Gi
-        cpu: "2"
+        cpu: 400m
     jvmOptions:
       -Xms: 1024m
       -Xmx: 1024m
@@ -76,7 +78,7 @@ spec:
                     - key: "strimzi.io/name"
                       operator: In
                       values:
-                        - my-cluster-zookeeper
+                        - kafka-cluster-zookeeper
                 topologyKey: "kubernetes.io/hostname"
     livenessProbe:
       initialDelaySeconds: 15
