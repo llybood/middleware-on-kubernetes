@@ -1,0 +1,149 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-slave
+  namespace: redis
+spec:
+  selector:
+    matchLabels:
+      app: redis-slave
+  serviceName: redis-slave
+  replicas: 2
+  updateStrategy:
+    type: RollingUpdate
+  podManagementPolicy: OrderedReady
+  template:
+    metadata:
+      labels:
+        app: redis-slave
+        app-sidecar: redis-sentinel
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: "app"
+                    operator: In
+                    values:
+                    - redis-master
+                    - redis-slave
+              topologyKey: "kubernetes.io/hostname"
+      initContainers:
+      - name: init-redis
+        imagePullPolicy: IfNotPresent
+        image: redis:5.0.1
+        command:
+        - bash
+        - "-c"
+        - |
+          set -ex
+          cp /mnt/config-map/slave.conf /etc/conf.d/redis.conf
+          cp /mnt/config-map/sentinel.conf /etc/conf.d/sentinel.conf
+        env:
+        - name: MY_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        volumeMounts:
+        - name: config-map
+          mountPath: /mnt/config-map
+        - name: conf
+          mountPath: /etc/conf.d
+      containers:
+      - name: redis-slave
+        imagePullPolicy: IfNotPresent
+        image: redis:5.0.1-alpine
+        resources:
+          requests:
+            cpu: 200m
+            memory: 500Mi
+        ports:
+        - containerPort: 6379
+          name: redis
+        command: ["redis-server"]
+        args:
+        - /etc/conf.d/redis.conf
+        - --cluster-announce-ip
+        - "$(MY_POD_IP)"
+        env:
+        - name: TZ
+          value: "Asia/Shanghai"
+        - name: MY_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        livenessProbe:
+          tcpSocket:
+            port: 6379
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        readinessProbe:
+          tcpSocket:
+            port: 6379
+          initialDelaySeconds: 5
+          failureThreshold: 3
+          periodSeconds: 5
+          timeoutSeconds: 3
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+        - name: conf
+          mountPath: /etc/conf.d
+      - name: redis-sentinel
+        imagePullPolicy: IfNotPresent
+        image: redis:5.0.1-alpine
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        ports:
+        - containerPort: 26379
+          name: redis
+        command: ["redis-server"] 
+        args:
+        - /etc/conf.d/sentinel.conf 
+        - --sentinel 
+        - announce-ip
+        - "$(MY_POD_IP)"
+        env:
+        - name: TZ
+          value: "Asia/Shanghai"
+        - name: MY_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        livenessProbe:
+          tcpSocket:
+            port: 26379
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        readinessProbe:
+          tcpSocket:
+            port: 26379
+          initialDelaySeconds: 5
+          failureThreshold: 3
+          periodSeconds: 5
+          timeoutSeconds: 3
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+        - name: conf
+          mountPath: /etc/conf.d
+      volumes:
+      - name: config-map
+        configMap:
+          name: redis
+      - name: conf
+        emptyDir: {}
+  volumeClaimTemplates:
+  - metadata:
+      name: redis-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: local-path-storage
+      resources:
+        requests:
+          storage: 10Gi
