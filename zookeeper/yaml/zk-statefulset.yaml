@@ -45,6 +45,8 @@ spec:
         env:
         - name: TZ
           value: "Asia/Shanghai"
+        - name: ZK_REPLICAS
+          value: "3"
         - name: ZK_CLIENT_PORT
           value: "2181"
         - name: ZK_SERVER_PORT

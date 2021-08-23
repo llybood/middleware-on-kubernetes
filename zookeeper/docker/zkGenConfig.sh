@@ -35,13 +35,12 @@ ZOOCFG="$ZOOCFGDIR/zoo.cfg"
 ID_FILE="$ZOO_DATA_DIR/myid"
 HOST=`hostname -s`
 DOMAIN=`hostname -d`
-ZK_REPLICAS=3
+ZK_REPLICAS=${ZK_REPLICAS:-3}
 
 function print_servers() {
     for (( i=1; i<=$ZK_REPLICAS; i++ ))
     do
-        echo "server.$i=$NAME-$((i-1)).$DOMAIN:$ZK_SERVER_PORT:$ZK_ELECTION_PORT"
-    done
+        echo "server.$i=$NAME-$((i-1)).$DOMAIN:$ZK_SERVER_PORT:$ZK_ELECTION_PORT" done
 }
 
 function validate_env() {
@@ -98,7 +97,7 @@ function create_config() {
     echo "maxSessionTimeout=$ZOO_MAX_SESSION_TIMEOUT" >> $ZOOCFG
     echo "autopurge.snapRetainCount=$ZOO_AUTOPURGE_SNAPRETAINCOUNT" >> $ZOOCFG
     echo "autopurge.purgeInteval=$ZOO_AUTOPURGE_PURGEINTERVAL" >> $ZOOCFG
-    echo "4lw.commands.whitelist=$ZOO_4LW_COMMANDS_WHITELIST" >> $ZOOCFG
+    echo "4lw.commands.whitelist=$ZOO_4LW_COMMANDS_WHITELIST" >> $ZOOCF
 
     if [ $ZK_REPLICAS -gt 1 ]; then
         print_servers >> $ZOOCFG
@@ -108,7 +107,7 @@ function create_config() {
 }
 
 function create_data_dirs() {
-    echo "Creating ZooKeeper data directories and setting permissions"
+    echo "Creating ZooKeeper data directories and generate my-id file"
 
     if [ ! -d $ZOO_DATA_DIR  ]; then
         mkdir -p $ZOO_DATA_DIR
@@ -126,7 +125,7 @@ function create_data_dirs() {
         echo $MY_ID >> $ID_FILE
     fi
 
-    echo "Created ZooKeeper data directories and set permissions in $ZK_DATA_DIR"
+    echo "Created ZooKeeper data directories and generate my-id file in $ZK_DATA_DIR"
 }
 
 validate_env && create_config  && create_data_dirs 
