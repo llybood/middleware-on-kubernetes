@@ -1,0 +1,78 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: skywalking-oap
+  namespace: skywalking
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: skywalking-oap
+  template:
+    metadata:
+      labels:
+        app: skywalking-oap
+        release: skywalking
+    spec:
+      serviceAccountName: skywalking-oap-admin
+      containers:
+      - name: skywalking-oap
+        image: registry.cn-beijing.aliyuncs.com/basetools/skywalking-oap:8.5.0-es7
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          tcpSocket:
+            port: 12800
+          periodSeconds: 3
+          timeoutSeconds: 3
+          failureThreshold: 3
+        startupProbe:
+          tcpSocket:
+            port: 12800
+          initialDelaySeconds: 30
+          failureThreshold: 30
+          periodSeconds: 10
+        ports:
+        - containerPort: 11800
+          name: oap-grpc
+        - containerPort: 12800
+          name: oap-rest
+        resources:
+          requests:
+            memory: 1Gi
+          limits:
+            memory: 2Gi
+        env:
+        - name: JAVA_OPTS
+          value: -Xms256M -Xmx512M
+        - name: SW_CLUSTER
+          value: standalone
+        - name: SKYWALKING_oap_UID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.uid
+        - name: SW_STORAGE
+          value: elasticsearch7
+        - name: SW_STORAGE_ES_CLUSTER_NODES
+          value: elasticsearch-es-default.elastic-system:9200
+        - name: SW_ES_USER
+          value: elastic
+        - name: SW_ES_PASSWORD
+          value: hvz4Y634eV3J9gFq35LRt23U
+        - name: SW_TRACE_SAMPLE_RATE
+          value: "10000"

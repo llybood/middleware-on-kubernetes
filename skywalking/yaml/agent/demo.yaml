@@ -1,0 +1,87 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+name: {app_name}
+namespace: {namespace}
+labels:
+ app: {app_name}
+spec:
+replicas: {replicas}
+selector:
+ matchLabels:
+  app: {app_name}
+template:
+ metadata:
+  labels:
+   app: {app_name}
+   deployment: {app_name}
+ spec:
+   enableServiceLinks: false
+   imagePullSecrets:
+   - name: harbor-secret
+   initContainers:
+   - name: sidecar
+    image: registry.cn-beijing.aliyuncs.com/basetools/skywalking-agent-sidecar:8.5.0
+    imagePullPolicy: IfNotPresent
+    command: ["cp", "-r", '/app/skywalking/agent', "/app/sidecar"]
+    volumeMounts:
+     - name: sidecar
+      mountPath: /app/sidecar
+   containers:
+   - name: {app_name}
+    image: {image_url}
+    imagePullPolicy: Always
+    startupProbe:
+     tcpSocket:
+      port: 8080
+     initialDelaySeconds: 10
+     failureThreshold: 50
+     periodSeconds: 5
+     timeoutSeconds: 3
+    readinessProbe:
+     tcpSocket:
+      port: 8080
+     initialDelaySeconds: 10
+     failureThreshold: 3
+     periodSeconds: 5
+     timeoutSeconds: 3
+    livenessProbe:
+     tcpSocket:
+      port: 8080
+     periodSeconds: 3
+     timeoutSeconds: 3
+     failureThreshold: 3
+    ports:
+    - containerPort: 8080
+    env:
+     - name: JAVA_OPTS
+      value: "{java_opts} -Dserver.port=8080"
+     - name: SW_AGENT_NAME
+      value: {app_name}
+     - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
+      value: oap.skywalking:11800
+     - name: POD_NAME
+      valueFrom:
+       fieldRef:
+        apiVersion: v1
+        fieldPath: metadata.name
+    volumeMounts:
+     - name: {app_name}-logs-volume
+      mountPath: /app/{app_name}/code/logs
+      subPathExpr: $(POD_NAME)
+     - mountPath: "/app/sidecar"
+      name: sidecar
+    resources:
+     requests:
+      cpu: 500m
+      memory: 1000Mi
+     limits:
+      cpu: {cpu_limit}
+      memory: {memory_limit}
+   volumes:
+    - name: {app_name}-logs-volume
+     hostPath:
+      path: /data/applogs
+    - name: sidecar #共享agent文件夹
+     emptyDir: {}
