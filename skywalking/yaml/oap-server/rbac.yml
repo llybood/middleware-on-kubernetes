@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: skywalking-oap-admin
+  namespace: skywalking
+
+---
+
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: skywalking-clusterrolebinding
+subjects:
+- kind: Group
+  name: system:serviceaccounts:skywalking
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: skywalking-clusterrole
+  apiGroup: rbac.authorization.k8s.io
+---
+
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: skywalking-clusterrole
+rules:
+- apiGroups: [""]
+  resources: ["pods", "endpoints", "services"]
+  verbs: ["get", "watch", "list"]
+- apiGroups: ["extensions"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["get", "watch", "list"]
