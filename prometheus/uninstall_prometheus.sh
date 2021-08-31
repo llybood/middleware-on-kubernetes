@@ -1,1 +1,1 @@
-kubectl delete --ignore-not-found=true -f manifests/ -f manifests/setup
+kubectl delete --ignore-not-found=true -f yaml/ -f yaml/crds -f yaml/service
