@@ -7,6 +7,7 @@ skywalking的部署分为服务端和客户端,服务端有2个组件,一个是o
 `sh install_skywalking.sh`
 # 卸载skywalking
 `sh uninstall_skywalking.sh`
-# skywalking集群自定义配置修改
+# oap-server组件自定义配置修改
 `vim yaml/oap-server/deployment.yml`
+# ui组件自定义配置修改
 `vim yaml/ui/deployment.yml`
