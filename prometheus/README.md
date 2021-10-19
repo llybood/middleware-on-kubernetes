@@ -12,3 +12,5 @@ https://github.com/rancher/local-path-provisioner
 `sh uninstall_prometheus.sh`
 # prometheus集群自定义配置修改
 `vim yaml/kafka-cluster.yaml`
+# 导入大屏
+> 登录grafana,导入1-k8s-for-prometheus-dashboard-20211010_rev7.json文件
