@@ -1,6 +1,8 @@
 # 说明
 redis提供2种部署方式,一种为redis集群模式,一种为redis哨兵模式
+
 redis集群模式最低需要6个副本
+
 redis哨兵模式最低需要3个副本
 
 为了性能考虑,存储使用本地存储。采用rancher提供的插件local-path-storage,基于HostPath使用自动PV.官方文档地址为
