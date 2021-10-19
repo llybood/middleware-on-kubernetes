@@ -11,5 +11,5 @@ https://github.com/rancher/local-path-provisioner
 # 卸载rocketmq
 `sh uninstall_rocketmq_cluster.sh`
 # rocketmq集群自定义配置修改
-`vim yaml/`
+`vim yaml/rocketmq_v1alpha1_rocketmq_cluster.yaml`
 
