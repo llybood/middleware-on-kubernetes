@@ -1,1 +1,3 @@
-# middleware-on-kubernetes
+# 说明
+Local Path Provisioner为Kubernetes用户提供了一种利用每个节点中的本地存储的方法。根据用户配置，Local Path Provisioner 将自动在节点上创建基于hostPath的持久卷。
+该插件为通用配置,为各个中间件提供持久化存储。其他中间件部署的时候需要应用该插件配置
