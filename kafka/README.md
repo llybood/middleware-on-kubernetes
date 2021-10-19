@@ -8,7 +8,7 @@ https://strimzi.io/quickstarts/
 https://github.com/rancher/local-path-provisioner
 # 安装kafka
 `sh install_kafka_cluster.sh`
-# 卸载elasticsearch
+# 卸载kafka
 `sh uninstall_kafka_cluster.sh`
 # kafka集群自定义配置修改
 `vim yaml/kafka-cluster.yaml`
