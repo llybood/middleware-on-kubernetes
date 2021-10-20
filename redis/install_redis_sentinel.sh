@@ -1,3 +1,4 @@
+kubectl create ns redis
 kubectl apply -f yaml/redis-sentinel/redis-configmap.yaml -n redis
 kubectl apply -f yaml/redis-sentinel/redis-master-svc.yaml -n redis
 kubectl apply -f yaml/redis-sentinel/redis-sentinel-svc.yaml -n redis
