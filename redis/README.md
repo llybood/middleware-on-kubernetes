@@ -10,6 +10,12 @@ redis哨兵模式最低需要3个副本
 https://github.com/rancher/local-path-provisioner
 # 安装redis集群
 `sh install_redis_cluster.sh`
+
+然后执行`kubectl get pods -n redis`查看pod状态,部署成功后执行
+
+`kubectl exec -it redis-cluster-0 -n redis -- redis-cli --cluster create --cluster-replicas 1 $(kubectl get pods -l app=redis-cluster -o jsonpath='{range.items[*]}{.status.podIP}:6379 {end}' -n redis)`
+
+进行创建集群操作
 # 安装redis哨兵
 `sh install_redis_sentinel.sh`
 # 卸载redis集群
@@ -20,4 +26,5 @@ https://github.com/rancher/local-path-provisioner
 `vim yaml/redis-cluster/redis-statefulset.yaml`
 # redis哨兵自定义配置修改
 `vim yaml/redis-sentinel/redis-master-deployment.yaml`
+
 `vim yaml/redis-sentinel/redis-slave-statefulset.yaml`
