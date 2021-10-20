@@ -26,3 +26,16 @@ spec:
     port: 3306
   selector:
     app: mysql
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-master
+  labels:
+    app: mysql
+spec:
+  ports:
+  - name: mysql
+    port: 3306
+  selector:
+    statefulset.kubernetes.io/pod-name: mysql-0
