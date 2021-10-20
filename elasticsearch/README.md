@@ -14,4 +14,13 @@ https://github.com/rancher/local-path-provisioner
 `sh uninstall_es_cluster.sh`
 # elasticsearch集群自定义配置修改
 `vim yaml/elasticsearch-cluster.yml`
+# 获取服务地址
+`kubectl get svc -n elastic-system`
+
+ES服务地址: elasticsearch-es-http.elastic-system:9200
+
+Kibana以NodePort形式对外暴露,地址为: http:/NodeIp:32423
+
+
+
 
