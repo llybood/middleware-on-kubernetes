@@ -16,6 +16,14 @@ spec:
       name: alertmanager-main
       namespace: monitoring
       port: web
+  storage:
+    volumeClaimTemplate:
+      spec:
+        storageClassName: local-path-storage
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests: 
+            storage: 10Gi
   externalLabels: {}
   image: quay.io/prometheus/prometheus:v2.26.0
   nodeSelector:
