@@ -1,1 +1,5 @@
-# middleware-on-kubernetes
+# 说明
+该项目是本人在项目中整理的各种常用中间件在k8s环境的部署模板及说明文档<br>
+因为中间件数据持久化以及性能的需求,该项目并没有使用分布式存储<br>
+存储插件使用的是rancher提供的local-path-provisioner,通过Node节点的Hostpath提供自动PV进行数据持久化<br>
+一些资源限制或者副本数配置可以根据各个中间件的说明文档来进行修改
