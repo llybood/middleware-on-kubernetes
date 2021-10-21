@@ -28,6 +28,7 @@ redis集群服务地址: redis-cluster.redis:6379
 # redis哨兵模式
 ## redis哨兵自定义配置修改
 `vim yaml/redis-sentinel/redis-master-deployment.yaml`
+
 `vim yaml/redis-sentinel/redis-slave-statefulset.yaml`
 ## 安装redis哨兵
 `sh install_redis_sentinel.sh`
