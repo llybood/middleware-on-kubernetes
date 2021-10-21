@@ -21,7 +21,7 @@ https://github.com/rancher/local-path-provisioner
 进行创建集群操作
 ## 获取服务地址
 `kubectl get svc -n redis`
-# 卸载redis集群
+## 卸载redis集群
 `sh uninstall_redis_cluster.sh`
 
 redis集群服务地址: redis-cluster.redis:6379
