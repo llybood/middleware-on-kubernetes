@@ -69,7 +69,7 @@ spec:
         description: Host instance {{ $labels.instance }}内存使用率过高,当前值为{{ $value | printf "%.2f" }}%
         summary: "Host instance {{ $labels.instance }} memory usage is too high"
     - alert: NodeDiskSpaceUsageHigh
-      expr: (1 - node_filesystem_avail_bytes{job="node-exporter",fstype=~"ext.*|xfs",mountpoint=~"/|/boot|/data|/home/admin"} / node_filesystem_size_bytes{job="node-exporter",fstype=~"ext.*|xfs",mountpoint=~"/|/boot|/data|/home/admin"}) * 100 > 60
+      expr: (1 - node_filesystem_avail_bytes{job="node-exporter",fstype=~"ext.*|xfs",mountpoint=~"/|/boot|/data|/home/admin"} / node_filesystem_size_bytes{job="node-exporter",fstype=~"ext.*|xfs",mountpoint=~"/|/boot|/data|/home/admin"}) * 100 > 80
       for: 1m
       labels:
         type: basic
