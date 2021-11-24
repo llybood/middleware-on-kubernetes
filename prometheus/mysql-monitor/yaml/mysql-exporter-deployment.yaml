@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${mysql-instance}-mysql-exporter
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ${mysql-instance}-mysql-exporter
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9104"
+      labels:
+        app.kubernetes.io/component: mysql-exporter
+        app.kubernetes.io/name: ${mysql-instance}-mysql-exporter
+    spec:
+      containers:
+      - name: mysqld-exporter
+        image: prom/mysqld-exporter:v0.13.0
+        env:
+        - name: USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: ${mysql-instance}-mysql-secret
+              key: username
+        - name: PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ${mysql-instance}-mysql-secret
+              key: password
+        - name: URL
+          valueFrom:
+            secretKeyRef:
+              name: ${mysql-instance}-mysql-secret
+              key: url
+        - name: DATA_SOURCE_NAME
+          value: $(USERNAME):$(PASSWORD)@($(URL))/
+        ports:
+        - containerPort: 9104
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+          limits:
+            cpu: 500m
+            memory: 500Mi
