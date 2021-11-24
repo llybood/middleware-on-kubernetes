@@ -1,0 +1,16 @@
+- job_name: 'redis_exporter_target'
+  static_configs:
+  - targets:
+    $filling_targets
+  metrics_path: /scrape
+  relabel_configs:
+    - source_labels: [__address__]
+      target_label: __param_target
+    - source_labels: [__param_target]
+      target_label: instance
+    - target_label: __address__
+      replacement: redis-exporter.monitoring:9121
+- job_name: 'redis_exporter'
+  static_configs:
+    - targets:
+      - redis-exporter.monitoring:9121

@@ -1,0 +1,41 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app.kubernetes.io/component: redis-exporter
+    app.kubernetes.io/name: redis-exporter
+    prometheus: k8s
+    role: alert-rules
+  name: redis-exporter-rules
+  namespace: monitoring
+spec:
+  groups:
+  - name: redis-exporter
+    rules:
+    - alert: RedisDown
+      expr: redis_up{job="redis_exporter_target"} == 0
+      for: 0m
+      labels:
+        type: redis
+        severity: critical
+      annotations:
+        description: Redis实例{{ $labels.instance }}未运行,请检查是否宕机
+        summary: "Redis instance is down"
+    - alert: RedisRejectedConnections
+      expr: increase(redis_rejected_connections_total{job="redis_exporter_target"}[1m]) > 0
+      for: 0m
+      labels:
+        type: redis
+        severity: critical
+      annotations:
+        description: Redis实例{{ $labels.instance }}最近1m开始拒绝客户端连接,请关注该实例连接数"
+        summary: "Some connections to Redis has been rejected"
+    - alert: RedisOutOfMemory
+      expr: redis_memory_used_bytes{job="redis_exporter_target"} / redis_total_system_memory_bytes{job="redis_exporter_target"} * 100 > 80
+      for: 5m
+      labels:
+        type: redis
+        severity: warning
+      annotations: 
+        description: Redis实例{{ $labels.instance }}内存使用率过高,当前值为{{ $value | printf "%.2f" }}
+        summary: 'Redis is running out of memory (> 80%)'

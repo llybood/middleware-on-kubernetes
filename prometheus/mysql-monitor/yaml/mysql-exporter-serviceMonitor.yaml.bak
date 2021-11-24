@@ -1,0 +1,25 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app.kubernetes.io/component: mysql-exporter
+    app.kubernetes.io/name: mysql-exporter
+  name: mysql-exporter
+  namespace: monitoring
+spec:
+ endpoints:
+ - interval: 15s
+   port: test-mysql-monitor-port
+   targetPort: 9104
+   relabelings:
+     - targetLabel: instance
+       replacement: test
+ - interval: 15s
+   port: prod-mysql-monitor-port
+   targetPort: 9104
+   relabelings:
+     - targetLabel: instance
+       replacement: prod
+ selector:
+   matchLabels:
+     app.kubernetes.io/component: mysql-exporter

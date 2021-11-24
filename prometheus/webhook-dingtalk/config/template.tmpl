@@ -1,0 +1,49 @@
+{{ define "my.__text_alert_list" }}
+**告警类型:** {{ .Labels.alertname }}
+
+**告警级别:** {{ .Labels.severity }}
+
+{{ if gt (len .Labels.namespace) 0 }}
+**命名空间:** {{ .Labels.namespace }}
+{{- end }}
+
+{{ if gt (len .Labels.container) 0 }}
+**告警容器:** {{ .Labels.container }}
+{{- end }}
+
+{{ if gt (len .Labels.source) 0 }}
+**告警应用:** {{ .Labels.source }}
+{{- end }}
+
+{{ if gt (len .Labels.instance) 0 }}
+**告警实例:** {{ .Labels.instance }}
+{{- end }}
+
+**告警描述:** {{ .Annotations.description }}
+
+{{- end }}
+
+{{ define "my.__text_firing_list" }}{{ range . }}
+**故障时间:** {{ dateInZone "2006.01.02 15:04:05" (.StartsAt) "Asia/Shanghai" }}
+{{ template "my.__text_alert_list" . }}
+{{ end }}{{ end }}
+
+{{ define "my.__text_resolved_list" }}{{ range . }}
+**恢复时间:** {{ dateInZone "2006.01.02 15:04:05" (.EndsAt) "Asia/Shanghai" }}
+{{ template "my.__text_alert_list" . }}
+{{ end }}{{ end }}
+
+{{ define "my.title" }}{{ template "__subject" . }}{{ end }}
+{{ define "my.content" }}
+{{ if gt (len .Alerts.Firing) 0 -}}
+**Alerts Firing**
+{{ template "my.__text_firing_list" .Alerts.Firing }}
+{{- end }}
+{{ if gt (len .Alerts.Resolved) 0 -}}
+**Alerts Resolved**
+{{ template "my.__text_resolved_list" .Alerts.Resolved }}
+{{- end }}
+{{- end }}
+
+{{ define "dingtalk.title" }}{{ template "my.title" . }}{{ end }}
+{{ define "dingtalk.content" }}{{ template "my.content" . }}{{ end }}

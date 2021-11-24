@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    service: webhook-dingtalk 
+  name: webhook-dingtalk
+  namespace: monitoring
+spec:
+  ports:
+    - name: http
+      port: 8060
+      targetPort: 8060
+  selector:
+    app: webhook-dingtalk
+  sessionAffinity: None
+  

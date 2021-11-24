@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${mysql-instance}-mysql-exporter
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/component: mysql-exporter
+    app.kubernetes.io/name: ${mysql-instance}-mysql-exporter
+spec:
+  type: ClusterIP
+  ports:
+  - port: 9104
+    protocol: TCP
+    name: ${mysql-instance}-mysql-monitor-port
+  selector:
+    app.kubernetes.io/name: ${mysql-instance}-mysql-exporter

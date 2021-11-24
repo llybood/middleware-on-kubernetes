@@ -46,6 +46,9 @@ spec:
     matchLabels:
       prometheus: k8s
       role: alert-rules
+  additionalScrapeConfigs:
+    name: additional-configs
+    key: prometheus-additional.yaml  
   securityContext:
     fsGroup: 2000
     runAsNonRoot: true
