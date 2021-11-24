@@ -15,7 +15,7 @@ EOF
 }
 
 #循环读取数据库列表,启动mysql-exporter容器
-cat mysql.list | while read line
+cat mysql.list | grep -v "实例名称" | while read line
 do
   mysql_instance=$(echo $line | awk '{print $1}')
   ip=$(echo $line | awk '{print $2}')
