@@ -22,7 +22,7 @@ targets:
   webhook2:
     url: https://oapi.dingtalk.com/robot/send?access_token=xxxxxxxxxxxx
   webhook_legacy:
-    url: https://oapi.dingtalk.com/robot/send?access_token=b5bf2032145088c06847326c472e756377cbe3fc25d515b0caa299c1e572adbb
+    url: https://oapi.dingtalk.com/robot/send?access_token=xxxxxxxxxxxx
     # Customize template content
     message:
       # Use legacy template
