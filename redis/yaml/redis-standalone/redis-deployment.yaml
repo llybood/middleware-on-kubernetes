@@ -1,0 +1,79 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: redis-standalone-data
+spec:
+  accessModes: [ "ReadWriteOnce" ]
+  storageClassName: local-path-storage
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-conf
+data:
+  redis.conf: |+
+    loglevel warning
+    logfile "/data/redis.log"
+    appendonly yes
+    protected-mode no
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-standalone
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-standalone
+  template:
+    metadata:
+      labels:
+        app: redis-standalone
+    spec:
+      containers:
+      - name: redis-standalone
+        image: redis:4.0.14-alpine3.11
+        ports:
+        - containerPort: 6379
+          name: client
+        livenessProbe:
+          tcpSocket:
+            port: 6379
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        readinessProbe:
+          tcpSocket:
+            port: 6379
+          initialDelaySeconds: 5
+          failureThreshold: 3
+          periodSeconds: 5
+          timeoutSeconds: 3
+        resources:
+          requests:
+            cpu: 200m
+            memory: 1000Mi
+          limits:
+            cpu: 1000m
+            memory: 1000Mi
+        volumeMounts:
+        - name: conf
+          mountPath: /conf
+          readOnly: false
+        - name: redis-standalone-data
+          mountPath: /data
+          readOnly: false
+      volumes:
+      - name: conf
+        configMap:
+          name: redis-conf
+          defaultMode: 0755
+      - name: redis-standalone-data
+        persistentVolumeClaim:
+          claimName: redis-standalone-data
+
