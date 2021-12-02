@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki
+  labels:
+    app.kubernetes.io/name: loki
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3100
+      protocol: TCP
+      name: http-metrics
+      targetPort: 3100
+  selector:
+    app.kubernetes.io/name: loki-write
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki-member
+  labels:
+    app.kubernetes.io/name: loki
+spec:
+  clusterIP: None
+  ports:
+    - port: 7946
+      protocol: TCP
+      name: memberlist
+      targetPort: 7946
+  selector:
+    app.kubernetes.io/name: loki-write
