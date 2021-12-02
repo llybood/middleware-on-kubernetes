@@ -32,7 +32,7 @@ if [ $(kubectl get secret -n monitoring | grep redis-monitor-secret | wc -l) -ne
   echo "当前已经存在redis-monitor-secret,请确认并手动删除后重新执行"
   exit 1
 fi
-kubectl create secret generic -n monitoring redis-monitor-secret --from-file=password-file.json -n monitoring 
+kubectl create secret generic redis-monitor-secret --from-file=password-file.json -n monitoring 
 # 获取当前additional-configs配置
 if [ $(kubectl get secret additional-configs -n monitoring 2>/dev/null | wc -l) -eq 2 ];then
   kubectl get secret additional-configs -n monitoring -o yaml | grep prometheus-additional.yaml | sed -n '1p' | awk '{print $2}' | base64 --decode > prometheus-additional.yaml
