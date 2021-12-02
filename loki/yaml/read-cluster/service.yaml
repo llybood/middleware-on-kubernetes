@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki-frontend
+  labels:
+    app.kubernetes.io/name: loki-frontend
+spec:
+  type: ClusterIP
+  ports:
+    - name: grpc
+      port: 9095
+      protocol: TCP
+      targetPort: 9095
+    - name: http-metrics
+      port: 3100
+      protocol: TCP
+      targetPort: 3100
+  sessionAffinity: None
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector:
+    app.kubernetes.io/name: loki-read
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki-querier
+  labels:
+    app.kubernetes.io/name: loki-querier
+spec:
+  type: ClusterIP
+  ports:
+    - name: http-metrics
+      port: 3100
+      protocol: TCP
+      targetPort: 3100
+  sessionAffinity: None
+  selector:
+    app.kubernetes.io/name: loki-querier
