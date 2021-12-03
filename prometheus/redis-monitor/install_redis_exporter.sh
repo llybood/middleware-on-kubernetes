@@ -4,6 +4,10 @@ cp redis-additional.yaml.template  redis-additional.yaml
 # 循环读取Redis列表,生成redis监控配置文件
 num=$(cat redis.list | grep -v "实例名称" | wc -l)
 lines=0
+if [ $num -eq 0 ];then
+    echo "未发现redis实例信息,请录入redis实例信息后再执行"
+    exit 1
+fi
 cat redis.list | grep -v "实例名称" | while read line
 do
   redis_instance=$(echo $line | awk '{print $1}')
