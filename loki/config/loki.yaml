@@ -3,10 +3,10 @@ auth_enabled: false
 common:
   storage:
     s3:
-      bucketnames: {bucketname}
-      endpoint: {endpoint}
-      access_key_id: {access-key-id}
-      secret_access_key: {secret-access-key}
+      bucketnames: dev-sale-retail
+      endpoint: oss-cn-beijing.aliyuncs.com
+      access_key_id: LTAI5tDpfTwNrp6m1fJCJ2nD
+      secret_access_key: DSviLUsIATJViYUOHc2sUN7OxIUAUV
       
 server:
   http_listen_address: 0.0.0.0
@@ -31,7 +31,8 @@ ingester:
   chunk_retain_period: 30s
   max_transfer_retries: 0
   wal:
-    enabled: false
+    enabled: true
+    dir: /loki/wal
 
 memberlist:
   abort_if_cluster_join_fails: false
