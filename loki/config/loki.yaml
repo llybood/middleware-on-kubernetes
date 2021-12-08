@@ -3,10 +3,10 @@ auth_enabled: false
 common:
   storage:
     s3:
-      bucketnames: dev-sale-retail
-      endpoint: oss-cn-beijing.aliyuncs.com
-      access_key_id: LTAI5tDpfTwNrp6m1fJCJ2nD
-      secret_access_key: DSviLUsIATJViYUOHc2sUN7OxIUAUV
+      bucketnames: xxxx
+      endpoint: xxxx
+      access_key_id: xxxx
+      secret_access_key: xxxx
       
 server:
   http_listen_address: 0.0.0.0
