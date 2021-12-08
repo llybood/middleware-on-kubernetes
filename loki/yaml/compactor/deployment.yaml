@@ -1,36 +1,36 @@
-apiVersion: apps/v1
-kind: StatefulSet
+kind: PersistentVolumeClaim
+apiVersion: v1
 metadata:
-  name: loki-read
-  labels:
-    app.kubernetes.io/name: loki-read
+  name: compactor-data
 spec:
-  replicas: 2
-  serviceName:  loki-frontend
+  accessModes: [ "ReadWriteOnce" ]
+  storageClassName: local-path-storage
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki-compactor
+  labels:
+    app.kubernetes.io/name: loki-compactor
+spec:
+  replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: loki-read
+      app.kubernetes.io/name: loki-compactor
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: loki-read
+        app.kubernetes.io/name: loki-compactor
     spec:
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: "app.kubernetes.io/name"
-                    operator: In
-                    values:
-                    - loki-read
-              topologyKey: "kubernetes.io/hostname"
       containers:
-      - name: loki-read
+      - name: loki-compactor
         image: grafana/loki:2.4.1
         args:
           - "-config.file=/etc/loki/loki.yaml"
-          - "-target=querier,query-frontend"
+          - "-target=compactor"
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 3100
@@ -50,7 +50,7 @@ spec:
         - name: loki-config
           mountPath: /etc/loki/
           readOnly: true
-        - name: loki-data
+        - name: data
           mountPath: /loki
         livenessProbe:
           httpGet:
@@ -73,12 +73,6 @@ spec:
         - name: loki-config
           secret:
             secretName: loki-config
-  volumeClaimTemplates:
-  - metadata:
-      name: loki-data
-    spec:
-      accessModes: ["ReadWriteOnce"]
-      storageClassName: local-path-storage
-      resources:
-        requests:
-          storage: "10Gi"
+        - name: data
+          persistentVolumeClaim:
+            claimName: compactor-data
