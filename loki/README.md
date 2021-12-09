@@ -4,7 +4,7 @@ Loki集群部署参考的是官方文档给出的Simple scalable deployment mode
 关于该架构的详细描述见[Simple scalable deployment mode](https://grafana.com/docs/loki/latest/fundamentals/architecture/#simple-scalable-deployment-mode)
 <br>
 但是在实际部署的时候发现,Loki加上"--target=read"参数启动read实例的时候,会启动compactor模块,和官方的配置描述[Supported contents and default values of](https://grafana.com/docs/loki/latest/configuration/#supported-contents-and-default-values-of-lokiyaml)有出入,但是根据[Compactor](https://grafana.com/docs/loki/latest/operations/storage/boltdb-shipper/#compactor)的说明,
-compactor实例建议只启动一个,启动多个compactor实例,可能数据有丢失的风险,所以我们单独部署一个compactor副本。因此我们集群各个实例的启动参数分别为
+compactor实例建议只启动一个,启动多个compactor实例,可能数据有丢失的风险,所以我们单独部署一个compactor副本。因此我们集群write实例有3个副本,read实例有2个副本,compactor实例一个副本.各个实例的启动参数分别为
 * read实例启动的参数为"--target=querier,query-frontend"
 * write实例启动的参数为"--target=write"
 * compactor实例启动的参数为"--target=compactor"
