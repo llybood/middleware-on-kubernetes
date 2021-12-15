@@ -22,7 +22,7 @@ metadata:
   labels:
     app: skywalking-ui
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: skywalking-ui
@@ -33,7 +33,8 @@ spec:
     spec:
       containers:
       - name: skywalking-ui
-        image: registry.cn-beijing.aliyuncs.com/basetools/skywalking-ui:8.5.0-es7
+        #image: registry.cn-beijing.aliyuncs.com/basetools/skywalking-ui:8.5.0-es7
+        image: apache/skywalking-ui:8.9.1
         ports:
         - containerPort: 8080
           name: ui-web
@@ -58,4 +59,4 @@ spec:
             memory: 2Gi
         env:
         - name: SW_OAP_ADDRESS
-          value: skywalking-oap:12800
+          value: skywalking-oap-server:12800
