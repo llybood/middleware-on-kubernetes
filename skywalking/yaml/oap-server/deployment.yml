@@ -17,23 +17,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: skywalking-oap
+  name: skywalking-oap-server
   namespace: skywalking
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      app: skywalking-oap
+      app: skywalking-oap-server
   template:
     metadata:
       labels:
-        app: skywalking-oap
+        app: skywalking-oap-server
         release: skywalking
     spec:
       serviceAccountName: skywalking-oap-admin
       containers:
-      - name: skywalking-oap
-        image: registry.cn-beijing.aliyuncs.com/basetools/skywalking-oap:8.5.0-es7
+      - name: skywalking-oap-server
+        image: apache/skywalking-oap-server:8.9.1
         imagePullPolicy: IfNotPresent
         livenessProbe:
           tcpSocket:
@@ -67,12 +67,12 @@ spec:
             fieldRef:
               fieldPath: metadata.uid
         - name: SW_STORAGE
-          value: elasticsearch7
+          value: elasticsearch
         - name: SW_STORAGE_ES_CLUSTER_NODES
           value: elasticsearch-es-default.elastic-system:9200
         - name: SW_ES_USER
           value: elastic
         - name: SW_ES_PASSWORD
-          value: hvz4Y634eV3J9gFq35LRt23U
+          value: Zg661MD5iCoj82KpViT4k263
         - name: SW_TRACE_SAMPLE_RATE
           value: "10000"
