@@ -4,7 +4,7 @@ metadata:
   name: kibana
   namespace: elastic-system
 spec:
-  version: 7.13.1
+  version: 7.16.1
   count: 1
   elasticsearchRef:
     name: elasticsearch
@@ -27,4 +27,4 @@ spec:
           limits:
             memory: 2Gi
             cpu: 2
-        image: docker.elastic.co/kibana/kibana:7.13.1
+        image: kibana:7.16.1
