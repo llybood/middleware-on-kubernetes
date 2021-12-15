@@ -14,7 +14,7 @@ metadata:
   namespace: elastic-system
   labels:
     control-plane: elastic-operator
-    app.kubernetes.io/version: "1.7.0"
+    app.kubernetes.io/version: "1.9.0"
 ---
 # Source: eck-operator/templates/webhook.yaml
 apiVersion: v1
@@ -24,7 +24,7 @@ metadata:
   namespace: elastic-system
   labels:
     control-plane: elastic-operator
-    app.kubernetes.io/version: "1.7.0"
+    app.kubernetes.io/version: "1.9.0"
 ---
 # Source: eck-operator/templates/configmap.yaml
 apiVersion: v1
@@ -34,7 +34,7 @@ metadata:
   namespace: elastic-system
   labels:
     control-plane: elastic-operator
-    app.kubernetes.io/version: "1.7.0"
+    app.kubernetes.io/version: "1.9.0"
 data:
   eck.yaml: |-
     log-verbosity: 0
@@ -49,6 +49,7 @@ data:
     kube-client-timeout: 60s
     elasticsearch-client-timeout: 180s
     disable-telemetry: false
+    distribution-channel: all-in-one
     validate-storage-class: true
     enable-webhook: true
     webhook-name: elastic-webhook.k8s.elastic.co
@@ -60,7 +61,7 @@ metadata:
   name: elastic-operator
   labels:
     control-plane: elastic-operator
-    app.kubernetes.io/version: "1.7.0"
+    app.kubernetes.io/version: "1.9.0"
 rules:
   - apiGroups:
       - "authorization.k8s.io"
@@ -71,14 +72,20 @@ rules:
   - apiGroups:
       - ""
     resources:
-      - pods
       - endpoints
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - pods
       - events
       - persistentvolumeclaims
       - secrets
       - services
       - configmaps
-      - serviceaccounts
     verbs:
       - get
       - list
@@ -119,8 +126,6 @@ rules:
       - elasticsearches
       - elasticsearches/status
       - elasticsearches/finalizers # needed for ownerReferences with blockOwnerDeletion on OCP
-      - enterpriselicenses
-      - enterpriselicenses/status
     verbs:
       - get
       - list
@@ -128,7 +133,6 @@ rules:
       - create
       - update
       - patch
-      - delete
   - apiGroups:
       - kibana.k8s.elastic.co
     resources:
@@ -142,7 +146,6 @@ rules:
       - create
       - update
       - patch
-      - delete
   - apiGroups:
       - apm.k8s.elastic.co
     resources:
@@ -156,7 +159,6 @@ rules:
       - create
       - update
       - patch
-      - delete
   - apiGroups:
       - enterprisesearch.k8s.elastic.co
     resources:
@@ -170,7 +172,6 @@ rules:
       - create
       - update
       - patch
-      - delete
   - apiGroups:
       - beat.k8s.elastic.co
     resources:
@@ -184,7 +185,6 @@ rules:
       - create
       - update
       - patch
-      - delete
   - apiGroups:
       - agent.k8s.elastic.co
     resources:
@@ -198,7 +198,6 @@ rules:
       - create
       - update
       - patch
-      - delete
   - apiGroups:
       - maps.k8s.elastic.co
     resources:
@@ -212,7 +211,6 @@ rules:
       - create
       - update
       - patch
-      - delete
   - apiGroups:
       - storage.k8s.io
     resources:
@@ -224,7 +222,6 @@ rules:
   - apiGroups:
       - admissionregistration.k8s.io
     resources:
-      - mutatingwebhookconfigurations
       - validatingwebhookconfigurations
     verbs:
       - get
@@ -245,7 +242,7 @@ metadata:
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
     control-plane: elastic-operator
-    app.kubernetes.io/version: "1.7.0"
+    app.kubernetes.io/version: "1.9.0"
 rules:
   - apiGroups: ["elasticsearch.k8s.elastic.co"]
     resources: ["elasticsearches"]
@@ -278,7 +275,7 @@ metadata:
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
     control-plane: elastic-operator
-    app.kubernetes.io/version: "1.7.0"
+    app.kubernetes.io/version: "1.9.0"
 rules:
   - apiGroups: ["elasticsearch.k8s.elastic.co"]
     resources: ["elasticsearches"]
@@ -309,7 +306,7 @@ metadata:
   name: elastic-operator
   labels:
     control-plane: elastic-operator
-    app.kubernetes.io/version: "1.7.0"
+    app.kubernetes.io/version: "1.9.0"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -327,7 +324,7 @@ metadata:
   namespace: elastic-system
   labels:
     control-plane: elastic-operator
-    app.kubernetes.io/version: "1.7.0"
+    app.kubernetes.io/version: "1.9.0"
 spec:
   ports:
     - name: https
@@ -344,7 +341,7 @@ metadata:
   namespace: elastic-system
   labels:
     control-plane: elastic-operator
-    app.kubernetes.io/version: "1.7.0"
+    app.kubernetes.io/version: "1.9.0"
 spec:
   selector:
     matchLabels:
@@ -357,7 +354,7 @@ spec:
         # Rename the fields "error" to "error.message" and "source" to "event.source"
         # This is to avoid a conflict with the ECS "error" and "source" documents.
         "co.elastic.logs/raw": "[{\"type\":\"container\",\"json.keys_under_root\":true,\"paths\":[\"/var/log/containers/*${data.kubernetes.container.id}.log\"],\"processors\":[{\"convert\":{\"mode\":\"rename\",\"ignore_missing\":true,\"fields\":[{\"from\":\"error\",\"to\":\"_error\"}]}},{\"convert\":{\"mode\":\"rename\",\"ignore_missing\":true,\"fields\":[{\"from\":\"_error\",\"to\":\"error.message\"}]}},{\"convert\":{\"mode\":\"rename\",\"ignore_missing\":true,\"fields\":[{\"from\":\"source\",\"to\":\"_source\"}]}},{\"convert\":{\"mode\":\"rename\",\"ignore_missing\":true,\"fields\":[{\"from\":\"_source\",\"to\":\"event.source\"}]}}]}]"
-        "checksum/config": c466597ab08f36a01c1e826b4a381ac8c613f2daf5e6946ef46cd1c53f796079
+        "checksum/config": 895dd3900dad2bf09bf2ad826419bc8abf3af5c7769915368df8ca09d6fdf184
       labels:
         control-plane: elastic-operator
     spec:
@@ -366,13 +363,12 @@ spec:
       securityContext:
         runAsNonRoot: true
       containers:
-        - image: "docker.elastic.co/eck/eck-operator:1.7.0"
+        - image: "docker.elastic.co/eck/eck-operator:1.9.0"
           imagePullPolicy: IfNotPresent
           name: manager
           args:
             - "manager"
             - "--config=/conf/eck.yaml"
-            - "--distribution-channel=all-in-one"
           env:
             - name: OPERATOR_NAMESPACE
               valueFrom:
@@ -418,7 +414,7 @@ metadata:
   name: elastic-webhook.k8s.elastic.co
   labels:
     control-plane: elastic-operator
-    app.kubernetes.io/version: "1.7.0"
+    app.kubernetes.io/version: "1.9.0"
 webhooks:
   - clientConfig:
       caBundle: Cg==
