@@ -20,7 +20,7 @@ metadata:
   name: skywalking-oap-server
   namespace: skywalking
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: skywalking-oap-server
