@@ -22,7 +22,7 @@ metadata:
   labels:
     app: skywalking-ui
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: skywalking-ui
@@ -59,4 +59,4 @@ spec:
             memory: 2Gi
         env:
         - name: SW_OAP_ADDRESS
-          value: skywalking-oap-server:12800
+          value: http://skywalking-oap-server:12800
