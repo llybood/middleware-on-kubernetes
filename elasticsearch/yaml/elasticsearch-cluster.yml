@@ -4,7 +4,7 @@ metadata:
   name: elasticsearch
   namespace: elastic-system
 spec:
-  version: 7.16.1
+  version: 7.16.2
   nodeSets:
   - name: default
     count: 3
@@ -27,7 +27,7 @@ spec:
             limits:
               memory: 4Gi
               cpu: 2
-          image: elasticsearch:7.16.1
+          image: elasticsearch:7.16.2
     volumeClaimTemplates:
     - metadata:
         name: elasticsearch-data
