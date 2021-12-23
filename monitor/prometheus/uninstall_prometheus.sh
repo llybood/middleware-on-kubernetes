@@ -1,1 +1,2 @@
-kubectl delete --ignore-not-found=true -f yaml/ -f yaml/crds -f yaml/service
+kubectl delete --ignore-not-found=true -f kube-prometheus/manifests/ -f kube-prometheus/manifests/setup
+kubectl delete -f service/

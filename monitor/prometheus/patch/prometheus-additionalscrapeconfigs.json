@@ -1,0 +1,9 @@
+[{
+   "op":"add",
+   "path":"/spec/additionalScrapeConfigs",
+   "value": {
+        "name": "additional-configs",
+        "key": "prometheus-additional.yaml"
+        }
+}]
+
