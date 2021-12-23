@@ -1,0 +1,10 @@
+[{
+	"op": "replace",
+	"path": "/spec/template/spec/volumes/0",
+	"value": {
+		"name": "grafana-storage",
+		"persistentVolumeClaim": {
+	 	    "claimName": "grafana-data"
+		}
+	}
+}]
