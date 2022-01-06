@@ -32,15 +32,6 @@ spec:
       annotations:
         description: Host instance {{ $labels.instance }} CPU使用率过高,当前值为{{ $value | printf "%.2f" }}%
         suggestion: "查找CPU利用率最高的进程,并分析是业务繁忙还是代码问题导致的CPU繁忙"
-    - alert: NodeCpuIowaitHigh
-      expr: avg by (instance) (irate(node_cpu_seconds_total{job="node-exporter",mode="iowait"}[5m])) * 100 > 30
-      for: 5m
-      labels:
-        type: basic
-        severity: warning
-      annotations:
-        description: Host instance {{ $labels.instance }} cpu iowait使用率过高,当前值为{{ $value | printf "%.2f" }}%
-        suggestion: "可以使用iostat和iotop查看磁盘IO情况和的进程,进一步分析产生原因"
     - alert: NodeCpuStealHigh
       expr: avg by(instance) (rate(node_cpu_seconds_total{job="node-exporter",mode="steal"}[5m])) * 100 > 10
       for: 5m
@@ -86,7 +77,8 @@ spec:
       annotations:
         description: Host instance {{ $labels.instance }}挂载点{{ $labels.mountpoint }}空间使用率过高,当前值为{{ $value | printf "%.2f" }}%
         suggestion: "磁盘使用率高,请清理无用数据或者扩容磁盘"
-      erver_has_leaderxpr: (1 - node_filesystem_files_free{job="node-exporter",fstype=~"ext4|xfs",mountpoint=~"/|/boot|/data|/home/admin"} / node_filesystem_files{job="node-exporter",fstype=~"ext4|xfs",mountpoint=~"/|/boot|/data|/home/admin"}) * 100 > 80
+    - alert: NodeDiskInodeUsageHigh
+      expr: (1 - node_filesystem_files_free{job="node-exporter",fstype=~"ext4|xfs",mountpoint=~"/|/boot|/data|/home/admin"} / node_filesystem_files{job="node-exporter",fstype=~"ext4|xfs",mountpoint=~"/|/boot|/data|/home/admin"}) * 100 > 80
       for: 10m
       labels:
         type: basic
