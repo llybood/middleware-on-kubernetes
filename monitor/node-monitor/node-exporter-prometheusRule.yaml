@@ -22,8 +22,8 @@ spec:
         severity: critical
       annotations:
         description: Host instance {{ $labels.instance }}未运行,请检查是否宕机
-        summary: "Host instance {{ $labels.instance }} is down"
-    - alert: NodeCpuHigh
+        suggestion: "检查机器状态,如果宕机请重新开机.开机后检查服务是否正常,并分析宕机原因"
+    - alert: NodeCpuUsageHigh
       expr: (1 - avg by (instance) (irate(node_cpu_seconds_total{job="node-exporter",mode="idle"}[5m]))) * 100 > 80
       for: 5m
       labels:
@@ -31,7 +31,7 @@ spec:
         severity: warning
       annotations:
         description: Host instance {{ $labels.instance }} CPU使用率过高,当前值为{{ $value | printf "%.2f" }}%
-        summary: "Host instance {{ $labels.instance }} CPU usage is too high"
+        suggestion: "查找CPU利用率最高的进程,并分析是业务繁忙还是代码问题导致的CPU繁忙"
     - alert: NodeCpuIowaitHigh
       expr: avg by (instance) (irate(node_cpu_seconds_total{job="node-exporter",mode="iowait"}[5m])) * 100 > 30
       for: 5m
@@ -40,7 +40,16 @@ spec:
         severity: warning
       annotations:
         description: Host instance {{ $labels.instance }} cpu iowait使用率过高,当前值为{{ $value | printf "%.2f" }}%
-        summary: "Host instance {{ $labels.instance }} iowait is too high"
+        suggestion: "可以使用iostat和iotop查看磁盘IO情况和的进程,进一步分析产生原因"
+    - alert: NodeCpuStealHigh
+      expr: avg by(instance) (rate(node_cpu_seconds_total{job="node-exporter",mode="steal"}[5m])) * 100 > 10
+      for: 5m
+      labels:
+        type: basic
+        severity: warning
+      annotations:
+        description: Host instance {{ $labels.instance }} cpu steal使用率为{{ $value | printf "%.2f" }}%,请关注
+        suggestion: "该值升高,可能会导致资源争抢,引起虚拟机性能下降,可以迁移该虚拟机到另外的物理机上"
     - alert: NodeLoad5High
       expr: node_load5 > (count by (instance) (node_cpu_seconds_total{job="node-exporter",mode='system'})) * 1.2
       for: 5m
@@ -49,7 +58,7 @@ spec:
         severity: warning
       annotations:
         description: Host instance {{ $labels.instance }} load(5m)的值超过CPU核数的1.2倍,当前值为{{ $value }}
-        summary: "Host instance {{ $labels.instance }} load(5m) is too high"
+        suggestion: "CPU繁忙,请查找繁忙进程,分析是否优化或者扩容资源"
     - alert: NodeLoad15High
       expr: node_load15 > (count by (instance) (node_cpu_seconds_total{job="node-exporter",mode='system'})) * 2
       for: 5m
@@ -58,7 +67,7 @@ spec:
         severity: critical
       annotations:
         description: Host instance {{ $labels.instance }} load(15m)的值超过CPU核数的2倍,当前值为{{ $value }}
-        summary: "Host instance {{ $labels.instance }} load(15m) is too high"
+        suggestion: "CPU异常繁忙,请分析优化代码或者扩容资源"
     - alert: NodeMemoryHigh
       expr: (1 - node_memory_MemAvailable_bytes{job="node-exporter"} / node_memory_MemTotal_bytes{job="node-exporter"}) * 100 > 80
       for: 5m
@@ -67,7 +76,7 @@ spec:
         severity: warning
       annotations:
         description: Host instance {{ $labels.instance }}内存使用率过高,当前值为{{ $value | printf "%.2f" }}%
-        summary: "Host instance {{ $labels.instance }} memory usage is too high"
+        suggestion: "内存使用率高,请查找内存占用高的进程,进一步分析优化代码还是扩容资源"
     - alert: NodeDiskSpaceUsageHigh
       expr: (1 - node_filesystem_avail_bytes{job="node-exporter",fstype=~"ext.*|xfs",mountpoint=~"/|/boot|/data|/home/admin"} / node_filesystem_size_bytes{job="node-exporter",fstype=~"ext.*|xfs",mountpoint=~"/|/boot|/data|/home/admin"}) * 100 > 80
       for: 1m
@@ -76,16 +85,15 @@ spec:
         severity: warning
       annotations:
         description: Host instance {{ $labels.instance }}挂载点{{ $labels.mountpoint }}空间使用率过高,当前值为{{ $value | printf "%.2f" }}%
-        summary: "Host instance {{ $labels.instance }} disk space usage is too high"
-    - alert: NodeDiskInodeUsageHigh
-      expr: (1 - node_filesystem_files_free{job="node-exporter",fstype=~"ext4|xfs",mountpoint=~"/|/boot|/data|/home/admin"} / node_filesystem_files{job="node-exporter",fstype=~"ext4|xfs",mountpoint=~"/|/boot|/data|/home/admin"}) * 100 > 80
+        suggestion: "磁盘使用率高,请清理无用数据或者扩容磁盘"
+      erver_has_leaderxpr: (1 - node_filesystem_files_free{job="node-exporter",fstype=~"ext4|xfs",mountpoint=~"/|/boot|/data|/home/admin"} / node_filesystem_files{job="node-exporter",fstype=~"ext4|xfs",mountpoint=~"/|/boot|/data|/home/admin"}) * 100 > 80
       for: 10m
       labels:
         type: basic
         severity: warning
       annotations:
         description: Host instance {{ $labels.instance }}挂载点{{ $labels.mountpoint }}inode使用率过高,当前值为{{ $value | printf "%.2f" }}%
-        summary: "Host instance {{ $labels.instance }} disk inode usage is too high"
+        suggestion: "磁盘inode使用率高,可能有大量的小文件,请删除无用的文件,释放inode"
     - alert: NodeClockNotSynchronising
       expr: node_timex_sync_status{job="node-exporter"} == 0
       for: 5m
@@ -94,7 +102,7 @@ spec:
         severity: warning
       annotations:
         description: Host instance {{ $labels.instance }}没有和时钟服务器同步
-        summary: "Host instance {{ $labels.instance }} is not synchronized with the clock server"
+        suggestion: "请尽量和时钟服务器保持同步,避免依赖于时间的服务异常"
     - alert: NodeTimeOffsetHigh
       expr: abs(node_timex_offset_seconds{job="node-exporter"}) > 60
       for: 2m
@@ -103,4 +111,4 @@ spec:
         severity: warning
       annotations:
         description: Host instance {{ $labels.instance }}时间偏差大于60s,请检查服务器时钟同步情况
-        description: "Host instance {{ $labels.instance }} the clock server offset is too large"
+        suggeston: "检查主机与ntp服务同步情况"
