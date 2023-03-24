@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: centos-tools
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: centos-tools
+  template:
+    metadata:
+      labels:
+        app: centos-tools
+    spec:
+      containers:
+      - name: centos-tools
+        image: centos-tools
+        imagePullPolicy: IfNotPresent  
+        env:
+          - name: TZ
+            value: Asia/Shanghai
+          - name: MY_status.podIP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: MY_status.hostIP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
+          - name: MY_status.nodeName
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: MY_status.podName
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+        command: ["top", "-b"]
