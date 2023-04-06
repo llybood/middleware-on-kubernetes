@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: alert
+    app.kubernetes.io/instance: dolphinscheduler
+    app.kubernetes.io/name: dolphinscheduler-alert
+  name: dolphinscheduler-alert
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: alert
+      app.kubernetes.io/instance: dolphinscheduler
+      app.kubernetes.io/name: dolphinscheduler-alert
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: alert
+        app.kubernetes.io/instance: dolphinscheduler
+        app.kubernetes.io/name: dolphinscheduler-alert
+    spec:
+      containers:
+      - env:
+        - name: TZ
+          value: Asia/Shanghai
+        - name: SPRING_JACKSON_TIME_ZONE
+          value: Asia/Shanghai
+        - name: DATABASE
+          value: mysql
+        - name: SPRING_DATASOURCE_URL
+          value: jdbc:mysql://192.168.229.121:3306/dolphinscheduler?characterEncoding=utf8
+        - name: SPRING_DATASOURCE_USERNAME
+          value: root
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: "123456"
+        - name: REGISTRY_TYPE
+          value: zookeeper
+        - name: REGISTRY_ZOOKEEPER_CONNECT_STRING
+          value: zk-hs.zookeeper:2181
+        - name: JAVA_OPTS
+          value: -Xms512m -Xmx512m -Xmn256m
+        envFrom:
+        - configMapRef:
+            name: dolphinscheduler-common
+        image: registry.cn-beijing.aliyuncs.com/basetools/dolphinscheduler-alert-server:3.1.1-mysql
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          exec:
+            command:
+            - curl
+            - -s
+            - http://localhost:50053/actuator/health/liveness
+          failureThreshold: 3
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 5
+        name: dolphinscheduler-alert
+        ports:
+        - containerPort: 50052
+          name: alert-port
+          protocol: TCP
+        - containerPort: 50053
+          name: actuator-port
+          protocol: TCP
+        readinessProbe:
+          exec:
+            command:
+            - curl
+            - -s
+            - http://localhost:50053/actuator/health/readiness
+          failureThreshold: 3
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 5
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /opt/dolphinscheduler/logs
+          name: dolphinscheduler-alert
+        - mountPath: /opt/dolphinscheduler/conf/common.properties
+          name: config-volume
+          subPath: common_properties
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - emptyDir: {}
+        name: dolphinscheduler-alert
+      - configMap:
+          defaultMode: 420
+          name: dolphinscheduler-configs
+        name: config-volume

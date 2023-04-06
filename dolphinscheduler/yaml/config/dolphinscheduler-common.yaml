@@ -1,0 +1,20 @@
+apiVersion: v1
+data:
+  DATA_BASEDIR_PATH: /tmp/dolphinscheduler
+  DATAX_HOME: /opt/soft/datax
+  DOLPHINSCHEDULER_OPTS: ""
+  FLINK_HOME: /opt/soft/flink
+  HADOOP_CONF_DIR: /opt/soft/hadoop/etc/hadoop
+  HADOOP_HOME: /opt/soft/hadoop
+  HIVE_HOME: /opt/soft/hive
+  JAVA_HOME: /opt/java/openjdk
+  PYTHON_HOME: /usr/bin/python2
+  RESOURCE_UPLOAD_PATH: /dolphinscheduler
+  SPARK_HOME1: /opt/soft/spark1
+  SPARK_HOME2: /opt/soft/spark2
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/instance: dolphinscheduler
+    app.kubernetes.io/name: dolphinscheduler-common
+  name: dolphinscheduler-common

@@ -1,0 +1,126 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app.kubernetes.io/component: master
+    app.kubernetes.io/instance: dolphinscheduler
+    app.kubernetes.io/name: dolphinscheduler-master
+  name: dolphinscheduler-master
+spec:
+  podManagementPolicy: Parallel
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: master
+      app.kubernetes.io/instance: dolphinscheduler
+      app.kubernetes.io/name: dolphinscheduler-master
+  serviceName: dolphinscheduler-master-headless
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: master
+        app.kubernetes.io/instance: dolphinscheduler
+        app.kubernetes.io/name: dolphinscheduler-master
+    spec:
+      containers:
+      - env:
+        - name: TZ
+          value: Asia/Shanghai
+        - name: SPRING_JACKSON_TIME_ZONE
+          value: Asia/Shanghai
+        - name: DATABASE
+          value: mysql
+        - name: SPRING_DATASOURCE_URL
+          value: jdbc:mysql://192.168.229.121:3306/dolphinscheduler?characterEncoding=utf8
+        - name: SPRING_DATASOURCE_USERNAME
+          value: root
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: "123456"
+        - name: REGISTRY_TYPE
+          value: zookeeper
+        - name: REGISTRY_ZOOKEEPER_CONNECT_STRING
+          value: zk-hs.zookeeper:2181
+        - name: JAVA_OPTS
+          value: -Xms1g -Xmx1g -Xmn512m
+        - name: MASTER_DISPATCH_TASK_NUM
+          value: "3"
+        - name: MASTER_EXEC_TASK_NUM
+          value: "20"
+        - name: MASTER_EXEC_THREADS
+          value: "100"
+        - name: MASTER_FAILOVER_INTERVAL
+          value: 10m
+        - name: MASTER_HEARTBEAT_ERROR_THRESHOLD
+          value: "5"
+        - name: MASTER_HEARTBEAT_INTERVAL
+          value: 10s
+        - name: MASTER_HOST_SELECTOR
+          value: LowerWeight
+        - name: MASTER_KILL_YARN_JOB_WHEN_HANDLE_FAILOVER
+          value: "true"
+        - name: MASTER_MAX_CPU_LOAD_AVG
+          value: "-1"
+        - name: MASTER_RESERVED_MEMORY
+          value: "0.3"
+        - name: MASTER_STATE_WHEEL_INTERVAL
+          value: 5s
+        - name: MASTER_TASK_COMMIT_INTERVAL
+          value: 1s
+        - name: MASTER_TASK_COMMIT_RETRYTIMES
+          value: "5"
+        envFrom:
+        - configMapRef:
+            name: dolphinscheduler-common
+        image: registry.cn-beijing.aliyuncs.com/basetools/dolphinscheduler-master:3.1.1-mysql
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          exec:
+            command:
+            - curl
+            - -s
+            - http://localhost:5679/actuator/health/liveness
+          failureThreshold: 3
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 5
+        name: dolphinscheduler-master
+        ports:
+        - containerPort: 5678
+          name: master-port
+          protocol: TCP
+        readinessProbe:
+          exec:
+            command:
+            - curl
+            - -s
+            - http://localhost:5679/actuator/health/readiness
+          failureThreshold: 3
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 5
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /opt/dolphinscheduler/logs
+          name: dolphinscheduler-master
+        - mountPath: /opt/dolphinscheduler/conf/common.properties
+          name: config-volume
+          subPath: common_properties
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - emptyDir: {}
+        name: dolphinscheduler-master
+      - configMap:
+          defaultMode: 420
+          name: dolphinscheduler-configs
+        name: config-volume
+  updateStrategy:
+    rollingUpdate:
+      partition: 0
+    type: RollingUpdate

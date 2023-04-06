@@ -1,0 +1,66 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    app.kubernetes.io/instance: dolphinscheduler
+  name: dolphinscheduler-db-init-job
+spec:
+  backoffLimit: 6
+  completionMode: NonIndexed
+  completions: 1
+  parallelism: 1
+  manualSelector: true
+  selector:
+    matchLabels:
+      name: dolphinscheduler-db-init-job
+  suspend: false
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: dolphinscheduler
+        name: dolphinscheduler-db-init-job
+    spec:
+      containers:
+      - args:
+        - tools/bin/upgrade-schema.sh
+        env:
+        - name: TZ
+          value: Asia/Shanghai
+        - name: SPRING_JACKSON_TIME_ZONE
+          value: Asia/Shanghai
+        - name: DATABASE
+          value: mysql
+        - name: SPRING_DATASOURCE_URL
+          value: jdbc:mysql://192.168.229.121:3306/dolphinscheduler?characterEncoding=utf8
+        - name: SPRING_DATASOURCE_USERNAME
+          value: root
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: "123456"
+        - name: REGISTRY_TYPE
+          value: zookeeper
+        - name: REGISTRY_ZOOKEEPER_CONNECT_STRING
+          value: zk-hs.zookeeper:2181
+        envFrom:
+        - configMapRef:
+            name: dolphinscheduler-common
+        image: registry.cn-beijing.aliyuncs.com/basetools/dolphinscheduler-tools:3.1.1-mysql
+        imagePullPolicy: IfNotPresent
+        name: dolphinscheduler-db-init-job
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      initContainers:
+      - command:
+        - sh
+        - -xc
+        - for i in $(seq 1 180); do nc -z -w3 192.168.229.121 3306 && exit 0 || sleep
+          5; done; exit 1
+        image: busybox:1.30
+        imagePullPolicy: IfNotPresent
+        name: wait-for-database
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      restartPolicy: Never
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
