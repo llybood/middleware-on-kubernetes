@@ -2,14 +2,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: dolphinscheduler-web
+  name: dolphinscheduler-api
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app.kubernetes.io/name: dolphinscheduler-api
   ports:
   - protocol: TCP
-    nodePort: 30011
     port: 12345
     targetPort: 12345
 

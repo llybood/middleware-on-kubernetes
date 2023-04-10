@@ -23,6 +23,7 @@ spec:
         app.kubernetes.io/instance: dolphinscheduler
         app.kubernetes.io/name: dolphinscheduler-worker
     spec:
+      serviceAccountName: dolphinscheduler
       containers:
       - env:
         - name: TZ
