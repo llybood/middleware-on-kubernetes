@@ -27,4 +27,7 @@ kubectl apply -f yaml/api-server/deployment.yaml -n $namespace
 kubectl apply -f yaml/alert-server/deployment.yaml -n $namespace
 
 # 部署service
-kubectl apply -f yaml/service/clusterip.yaml -n $namespace
+kubectl apply -f yaml/service/dolphinscheduler-alert.yaml -n $namespace
+kubectl apply -f yaml/service/dolphinscheduler-api.yaml -n $namespace
+kubectl apply -f yaml/service/dolphinscheduler-master-headless.yaml -n $namespace
+kubectl apply -f yaml/service/dolphinscheduler-worker-headless.yaml -n $namespace

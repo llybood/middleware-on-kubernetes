@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: dolphinscheduler-master-headless
+  name: dolphinscheduler-master-headless
+spec:
+  clusterIP: None
+  ports:
+  - name: master-port
+    port: 5678
+    protocol: TCP
+    targetPort: master-port
+  selector:
+    app.kubernetes.io/name: dolphinscheduler-master
+  sessionAffinity: None

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: dolphinscheduler-worker-headless
+  name: dolphinscheduler-worker-headless
+spec:
+  clusterIP: None
+  ports:
+  - name: worker-port
+    port: 1234
+    protocol: TCP
+    targetPort: worker-port
+  selector:
+    app.kubernetes.io/name: dolphinscheduler-worker
+  sessionAffinity: None
