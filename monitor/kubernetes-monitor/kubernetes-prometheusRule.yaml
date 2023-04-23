@@ -172,13 +172,13 @@ spec:
         description: "{{ $labels.namespace }}/{{ $labels.pod }}下的容器{{ $labels.container }}长时间处于Waiting状态"
         summary: Kubernetes container waiting (instance {{ $labels.instance }})
     - alert: KubernetesPodNotHealthy
-      expr: kube_pod_status_phase{phase=~"Pending|Unknown|Failed"}) > 0 
+      expr: kube_pod_status_phase{phase=~"Pending|Unknown|Failed"} > 0 
       for: 10m
       labels:
         type: kubernetes
         severity: critical
       annotations:
-        description: "{{ $labels.namespace }}下的pod {{ $labels.pod }长时间处于{{ $labels.phase }}状态"
+        description: "{{ $labels.namespace }}下的pod {{ $labels.pod }}长时间处于{{ $labels.phase }}状态"
         summary: Kubernetes Pod not healthy (instance {{ $labels.instance }})
     - alert: KubernetesPodCrashLooping
       expr: increase(kube_pod_container_status_restarts_total{job=~".*kube-state-metrics"}[5m]) > 0
@@ -187,7 +187,7 @@ spec:
         type: kubernetes
         severity: warning
       annotations:
-        description: "{{ $labels.namespace }}下的pod {{ $labels.pod }最近5分钟频繁重启"
+        description: "{{ $labels.namespace }}下的pod {{ $labels.pod }}最近5分钟频繁重启"
         summary: Kubernetes pod crash looping (instance {{ $labels.instance }}) 
     - alert: KubernetesDeploymentReplicasMismatch
       expr: |
