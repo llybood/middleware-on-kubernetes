@@ -80,17 +80,17 @@ spec:
         type: kubernetes
         severity: warning
       annotations:
-        description: "k8s集群节点{{ $lables.node }}不可达,该节点上的工作负载会重新调度"
+        description: "k8s集群节点{{ $labels.node }}不可达,该节点上的工作负载会重新调度"
         summary: kubernetes cluster node unreachable
     - alert: KubernetesNodeShake
       expr: |
         sum(changes(kube_node_status_condition{status="true",condition="Ready"}[15m])) by (cluster, node) > 2
       for: 15m
-      lables:
+      labels:
         type: kubernetes
         severity: warning
       annotations:
-        description: "k8s集群节点{{ $lables.node }}最近15m状态不稳定,在ready和notready之间切换"
+        description: "k8s集群节点{{ $labels.node }}最近15m状态不稳定,在ready和notready之间切换"
         summary: kubernetes cluster node shake
     - alert: KubernetesOutOfCapacity
       expr: sum by (node) ((kube_pod_status_phase{phase="Running"} == 1) + on(uid) group_left(node) (0 * kube_pod_info{pod_template_hash=""})) / sum by (node) (kube_node_status_allocatable{resource="pods"}) * 100 > 90
