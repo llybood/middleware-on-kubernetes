@@ -63,7 +63,7 @@ spec:
         envFrom:
         - configMapRef:
             name: dolphinscheduler-common
-        image: registry.cn-beijing.aliyuncs.com/basetools/dolphinscheduler-worker:3.1.1-mysql
+        image: registry.cn-beijing.aliyuncs.com/basetools/dolphinscheduler-worker:3.1.1-mysql-hotfix
         imagePullPolicy: IfNotPresent
         livenessProbe:
           exec:
