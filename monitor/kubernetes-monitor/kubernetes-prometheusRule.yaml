@@ -1,0 +1,333 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app.kubernetes.io/name: kube-prometheus
+    app.kubernetes.io/part-of: kube-prometheus
+    prometheus: k8s
+    role: alert-rules
+  name: kubernetes-monitoring-rules
+  namespace: monitoring
+spec:
+  groups:
+  - name: kubernetes-cluster
+    rules:
+    - alert: KubernetesCpuOvercommit
+      expr: |
+        sum(namespace_cpu:kube_pod_container_resource_requests:sum{})
+          >
+        sum(kube_node_status_allocatable{resource="cpu"}) - max(kube_node_status_allocatable{resource="cpu"})
+      for: 10m
+      labels:
+        type: kubernetes
+        severity: warning
+      annotations:
+        description: 'k8s集群Pod过度提交CPU资源请求,已经无法容忍最低一台节点故障,当前CPU请求量为{{ $value | printf "%.2f"}}'
+        summary: Cluster has overcommitted CPU resource requests
+    - alert: KubernetesMemoryOvercommit
+      expr: |
+        sum(namespace_memory:kube_pod_container_resource_requests:sum{})
+          >
+        sum(kube_node_status_allocatable{resource="memory"}) - max(kube_node_status_allocatable{resource="memory"})
+      for: 10m
+      labels:
+        type: kubernetes
+        severity: warning
+      annotations:
+        description: "k8s集群Pod过度提交内存资源请求,已经无法容忍最低一台节点故障,当前Memory请求量为{{ $value | humanize1024 }}GB"
+        summary: Cluster has overcommitted memory resource requests
+    - alert: KubernetesNodeNotReady
+      expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+      for: 1m
+      labels:
+        type: kubernetes
+        severity: critical
+      annotations:
+        description: "k8s集群节点{{ $labels.node }}处于NotReady状态"
+        summary: Kubernetes Node ready (instance {{ $labels.instance }})
+    - alert: KubernetesMemoryPressure
+      expr: kube_node_status_condition{condition="MemoryPressure",status="true"} == 1
+      for: 1m
+      labels:
+        type: kubernetes
+        severity: critical
+      annotations:
+        description: "k8s集群节点{{ $labels.node }}处于MemoryPressure状态"
+        summary: Kubernetes memory pressure (instance {{ $labels.instance }})
+    - alert: KubernetesDiskPressure
+      expr: kube_node_status_condition{condition="DiskPressure",status="true"} == 1
+      for: 1m
+      labels:
+        type: kubernetes
+        severity: critical
+      annotations:
+        description: "k8s集群节点{{ $labels.node }}处于DiskPressure状态"
+        summary: Kubernetes disk pressure (instance {{ $labels.instance }})
+    - alert: KubernetesNetworkUnavailable
+      expr: kube_node_status_condition{condition="NetworkUnavailable",status="true"} == 1
+      for: 1m
+      labels:
+        type: kubernetes
+        severity: critical
+      annotations:
+        description: "k8s集群节点{{ $labels.node }}处于NetworkUnavailable状态"
+        summary: Kubernetes network unavailable (instance {{ $labels.instance }})
+    - alert: KubernetesNodeUnreachable
+      expr: | 
+        kube_node_spec_taint{job=~".*kube-state-metrics",key="node.kubernetes.io/unreachable",effect="NoSchedule"} == 1
+      for: 0m
+      labels:
+        type: kubernetes
+        severity: warning
+      annotations:
+        description: "k8s集群节点{{ $lables.node }}不可达,该节点上的工作负载会重新调度"
+        summary: kubernetes cluster node unreachable
+    - alert: KubernetesNodeShake
+      expr: |
+        sum(changes(kube_node_status_condition{status="true",condition="Ready"}[15m])) by (cluster, node) > 2
+      for: 15m
+      lables:
+        type: kubernetes
+        severity: warning
+      annotations:
+        description: "k8s集群节点{{ $lables.node }}最近15m状态不稳定,在ready和notready之间切换"
+        summary: kubernetes cluster node shake
+    - alert: KubernetesOutOfCapacity
+      expr: sum by (node) ((kube_pod_status_phase{phase="Running"} == 1) + on(uid) group_left(node) (0 * kube_pod_info{pod_template_hash=""})) / sum by (node) (kube_node_status_allocatable{resource="pods"}) * 100 > 90
+      for: 2m
+      labels:
+        type: kubernetes
+        severity: warning
+      annotations:
+        description: "k8s集群节点{{ $labels.node }}运行pod数量将要达到上限,当前数量为{{ $value }}"
+        summary: Kubernetes out of capacity (instance {{ $labels.instance }})
+    - alert: KubernetesVersionMismatch
+      expr: |
+        count(count by (git_version) (label_replace(kubernetes_build_info{job!~"kube-dns|coredns"},"git_version","$1","git_version","(v[0-9]*.[0-9]*).*"))) > 1
+      for: 15m
+      labels:
+        type: kubernetes
+        severity: warning
+      annotations:
+        description: "k8s集群运行组件版本不一致"
+        summary: Different semantic versions of Kubernetes components running
+    - alert: KubeletClientCertificateExpirationNextMonth 
+      expr:  7*24*60*60 < min(kubelet_certificate_manager_client_ttl_seconds) < 30*24*60*60
+      for: 0m
+      labels:
+        type: kubernetes
+        severity: warning
+      annotations:
+        description: "k8s集群证书即将在30天内过期,当前剩余时间{{ $value | humanizeDuration }}"
+        summary: Kubelet client certificate is about to expire
+    - alert: KubeletClientCertificateExpirationNextWeek
+      expr: 24*60*60 < min(kubelet_certificate_manager_client_ttl_seconds) < 7*24*60*60
+      for: 0m
+      labels:
+        type: kubernetes
+        severity: critical
+      annotations:
+        description: "k8s集群证书即将在7天内过期,当前剩余时间{{ $value | humanizeDuration }}"
+        summary: Kubelet client certificate is about to expire
+    - alert: KubeletClientCertificateExpirationNextDay
+      expr: min(kubelet_certificate_manager_client_ttl_seconds) < 24*60*60
+      for: 0m
+      labels:
+        type: kubernetes
+        severity: critical
+      annotations:
+        description: "k8s集群证书即将在1天内过期,当前剩余时间{{ $value | humanizeDuration }}"
+        summary: Kubelet client certificate is about to expire
+  - name: kubernetes-workload
+    rules:
+    - alert: KubernetesContainerCPUThrottlingHigh
+      expr:  |
+        sum(increase(container_cpu_cfs_throttled_periods_total{container!="", }[5m])) by (container, pod, namespace)
+        /
+        sum(increase(container_cpu_cfs_periods_total{}[5m])) by (container, pod, namespace)
+        > ( 25 / 100 )
+      for: 15m
+      labels:
+        type: kubernetes
+        severity: info
+      annotations:
+        description: "{{ $labels.namespace }}/{{ $labels.pod }}下的容器{{ $labels.container }}最近15m内受到CPU使用限制"
+        summary: Processes experience elevated CPU throttling
+    - alert: KubernetesContainerOomKiller
+      expr: (kube_pod_container_status_restarts_total - kube_pod_container_status_restarts_total offset 10m >= 1) and ignoring (reason) min_over_time(kube_pod_container_status_last_terminated_reason{reason="OOMKilled"}[10m]) == 1
+      for: 0m
+      labels:
+        type: kubernetes
+        severity: warning
+      annotations:
+        description: "在过去的10分钟内{{ $labels.namespace }}/{{ $labels.pod }}下的容器{{ $labels.container }}被OOMKilled了{{ $value }}次"
+        summary: Kubernetes container oom killer (instance {{ $labels.instance }})
+    - alert: KubernetesContainerWaiting
+      expr: sum by (namespace, pod, container, cluster) (kube_pod_container_status_waiting_reason{job=~".*kube-state-metrics"}) > 0
+      for: 15m
+      labels:
+        type: kubernetes
+        severity: warning
+      annotations:
+        description: "{{ $labels.namespace }}/{{ $labels.pod }}下的容器{{ $labels.container }}长时间处于Waiting状态"
+        summary: Kubernetes container waiting (instance {{ $labels.instance }})
+    - alert: KubernetesPodNotHealthy
+      expr: kube_pod_status_phase{phase=~"Pending|Unknown|Failed"}) > 0 
+      for: 10m
+      labels:
+        type: kubernetes
+        severity: critical
+      annotations:
+        description: "{{ $labels.namespace }}下的pod {{ $labels.pod }长时间处于{{ $labels.phase }}状态"
+        summary: Kubernetes Pod not healthy (instance {{ $labels.instance }})
+    - alert: KubernetesPodCrashLooping
+      expr: increase(kube_pod_container_status_restarts_total{job=~".*kube-state-metrics"}[5m]) > 0
+      for: 10m
+      labels: 
+        type: kubernetes
+        severity: warning
+      annotations:
+        description: "{{ $labels.namespace }}下的pod {{ $labels.pod }最近5分钟频繁重启"
+        summary: Kubernetes pod crash looping (instance {{ $labels.instance }}) 
+    - alert: KubernetesDeploymentReplicasMismatch
+      expr: |
+        (  kube_deployment_spec_replicas{job=~".*kube-state-metrics"} != kube_deployment_status_replicas_available{job=~".*kube-state-metrics"}) 
+        and 
+        (  changes(kube_deployment_status_replicas_updated{job=~".*kube-state-metrics"}[5m])    ==  0)
+      for: 10m
+      labels:
+        type: kubernetes
+        severity: warning
+      annotations:
+        description: "{{ $labels.namespace }}下的deployment {{ $labels.deployment }}实际副本数和设置副本数不一致"
+        summary: Kubernetes Deployment replicas mismatch (instance {{ $labels.instance }})
+    - alert: KubernetesDeploymentGenerationMismatch
+      expr: kube_deployment_status_observed_generation{job=~".*kube-state-metrics"}  != kube_deployment_metadata_generation{job=~".*kube-state-metrics"}
+      for: 10m
+      labels:
+        type: kubernetes
+        severity: critical
+      annotations:
+        description: "{{ $labels.namespace }}下的deployment {{ $labels.deployment }}部署版本和设置版本不一致,变更没有生效"
+        summary: Kubernetes Deployment generation mismatch (instance {{ $labels.instance }})
+    - alert: KubernetesStatefulsetReplicasMismatch
+      expr: |
+        ( kube_statefulset_status_replicas_ready{job=~".*kube-state-metrics"} !=  kube_statefulset_status_replicas{job=~".*kube-state-metrics"}) 
+        and 
+        ( changes(kube_statefulset_status_replicas_updated{job=~".*kube-state-metrics"}[5m]) == 0)
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        description: "{{ $labels.namespace }}下的statefulset {{ $labels.statefulset }}实际副本数和设置副本数不一致"
+        summary: Kubernetes StatefulSet replicas mismatch (instance {{ $labels.instance }})
+    - alert: KubernetesStatefulsetGenerationMismatch
+      expr: kube_statefulset_status_observed_generation{job=~".*kube-state-metrics"} != kube_statefulset_metadata_generation{job=~".*kube-state-metrics"}
+      for: 10m
+      labels:
+        severity: critical
+      annotations:
+        description: "{{ $labels.namespace }}下的statefulset {{ $labels.statefulset }}部署版本和设置版本不一致,变更没有生效"
+        summary: Kubernetes StatefulSet generation mismatch (instance {{ $labels.instance }})
+    - alert: KubernetesStatefulsetUpdateNotRolledOut
+      expr: |
+        ( max without (revision) ( kube_statefulset_status_current_revision{job=~".*kube-state-metrics"} 
+        unless 
+        kube_statefulset_status_update_revision{job=~".*kube-state-metrics"}) * ( kube_statefulset_replicas{job=~".*kube-state-metrics"} 
+        != 
+        kube_statefulset_status_replicas_updated{job=~".*kube-state-metrics"} ))  
+        and 
+        ( changes(kube_statefulset_status_replicas_updated{job=~".*kube-state-metrics"}[5m]) == 0)
+      for: 10m
+      labels:
+        type: kubernetes
+        severity: warning
+      annotations:
+        description: "{{ $labels.namespace }}下的statefulset {{ $labels.statefulset }}部分pod没有更新"
+        summary: Kubernetes StatefulSet update not rolled out (instance {{ $labels.instance }})
+    - alert: KubernetesDaemonsetRolloutStuck
+      expr: |
+        kube_daemonset_status_number_ready{job=~".*kube-state-metrics"} / kube_daemonset_status_desired_number_scheduled{job=~".*kube-state-metrics"} * 100 < 100 
+        or 
+        kube_daemonset_status_desired_number_scheduled{job=~".*kube-state-metrics"} - kube_daemonset_status_current_number_scheduled{job=~".*kube-state-metrics"} > 0
+      for: 10m
+      labels:
+        type: kubernetes
+        severity: warning
+      annotations:
+        description: "{{ $labels.namespace }}下的daemonset {{ $labels.daemonset }}一部分pod没有调度或者ready"
+        summary: Kubernetes DaemonSet rollout stuck (instance {{ $labels.instance }})
+    - alert: KubernetesDaemonsetMisscheduled
+      expr: kube_daemonset_status_number_misscheduled{job=~".*kube-state-metrics"} > 0
+      for: 10m
+      labels:
+        type: kubernetes
+        severity: critical
+      annotations:
+        description: "{{ $labels.namespace }}下的daemonset {{ $labels.daemonset }}被错误调度到某些node"
+        summary: Kubernetes DaemonSet misscheduled (instance {{ $labels.instance }})
+    - alert: KubernetesJobFailed
+      expr: kube_job_status_failed{job=~".*kube-state-metrics"} > 0
+      for: 0m
+      labels:
+        type: kubernetes
+        severity: warning
+      annotations:
+        description: "{{ $labels.namespace }}下的job {{ $labels.job_name }}执行失败"
+        summary: Kubernetes Job failed (instance {{ $labels.instance }})
+    - alert: KubernetesJobSlowCompletion
+      expr: kube_job_spec_completions{job=~".*kube-state-metrics"} - kube_job_status_succeeded{job=~".*kube-state-metrics"}  > 0
+      for: 1h
+      labels:
+        type: kubernetes
+        severity: warning
+      annotations:
+        description: "{{ $labels.namespace }}下的job {{ $labels.job_name }}执行时间过长,超过1h"
+        summary: Kubernetes job slow completion (instance {{ $labels.instance }})
+    - alert: KubernetesCronjobSuspended
+      expr: kube_cronjob_spec_suspend{job=~".*kube-state-metrics"} != 0
+      for: 0m
+      labels:
+        type: kubernetes
+        severity: warning
+      annotations:
+        description: "{{ $labels.namespace }}下的cronjob{{ $labels.cronjob }}处于挂起状态"
+        summary: Kubernetes CronJob suspended (instance {{ $labels.instance }})
+    - alert: KubernetesCronjobTooLong
+      expr: time() - kube_cronjob_next_schedule_time > 3600
+      for: 0m
+      labels:
+        type: kubernetes
+        severity: warning
+      annotations:
+        description: "{{ $labels.namespace }}下的cronjob {{ $labels.cronjob }}执行时间超过1个小时"
+        summary: Kubernetes CronJob too long (instance {{ $labels.instance }})
+    - alert: KubernetesPersistentvolumeError
+      expr: kube_persistentvolume_status_phase{phase=~"Failed|Pending", job="kube-state-metrics"} > 0
+      for: 0m
+      labels:
+        type: kubernetes
+        severity: critical
+      annotations:
+        description: "pv {{ $labels.persistentvolume }}处于Failed或Pending状态"
+        summary: Kubernetes PersistentVolume error (instance {{ $labels.instance }})
+  - name: kubernetes-api
+    rules:
+    - alert: KubernetesApiServerErrors
+      expr: sum(rate(apiserver_request_total{job="apiserver",code=~"^(?:5..)$"}[1m])) / sum(rate(apiserver_request_total{job="apiserver"}[1m])) * 100 > 3
+      for: 2m
+      labels:
+        type: kubernetes
+        severity: critical
+      annotations:
+        description: "k8s集群API server请求错误率过高"
+        summary: Kubernetes API server errors (instance {{ $labels.instance }})
+    - alert: KubernetesApiClientErrors
+      expr: (sum(rate(rest_client_requests_total{code=~"(4|5).."}[1m])) by (instance, job) / sum(rate(rest_client_requests_total[1m])) by (instance, job)) * 100 > 3
+      for: 2m
+      labels:
+        type: kubernetes
+        severity: critical
+      annotations:
+        description: "k8s集群API client请求错误率过高"
+        summary: Kubernetes API client errors (instance {{ $labels.instance }})
