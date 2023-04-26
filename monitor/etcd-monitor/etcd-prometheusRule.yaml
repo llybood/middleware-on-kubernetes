@@ -1,0 +1,95 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app.kubernetes.io/component: etcd-monitor
+    app.kubernetes.io/name: etcd-monitor
+    prometheus: k8s
+    role: alert-rules
+  name: etcd-alter-rules
+  namespace: monitoring
+spec:
+  groups:
+    - name: etcd-monitor
+      rules:
+      - alert: EtcdInsufficientMembers
+        expr: count(etcd_server_id{job=~".*etcd-monitor"}) % 2 == 0
+        for: 0m
+        labels:
+          type: etcd
+          severity: critical
+        annotations:
+          description: Etcd集群节点数量异常,不满足2N+1节点
+          summary: Etcd insufficient Members (instance {{ $labels.instance }})
+      - alert: EtcdNoLeader
+        expr: etcd_server_has_leader{job=~".*etcd-monitor"} == 0
+        for: 0m
+        labels:
+          type: etcd
+          severity: critical
+        annotations:
+          description: Etcd集群缺少leader节点
+          summary: Etcd no Leader (instance {{ $labels.instance }})
+      - alert: EtcdHighNumberOfLeaderChanges
+        expr: increase(etcd_server_leader_changes_seen_total{job=~".*etcd-monitor"}[10m]) > 2
+        for: 0m
+        labels:
+          type: etcd
+          severity: warning
+        annotations:
+          description: Etcd集群在过去10m内leader发生变化的次数超过了2次
+          summary: Etcd high number of leader changes (instance {{ $labels.instance }})
+      - alert: EtcdHighNumberOfFailedGrpcRequests
+        expr: sum(rate(grpc_server_handled_total{job=~".*etcd-monitor",grpc_code!="OK"}[1m])) BY (grpc_service, grpc_method) / sum(rate(grpc_server_handled_total{job=~".*etcd-monitor"}[1m])) BY (grpc_service, grpc_method) > 0.01
+        for: 2m
+        labels:
+          type: etcd
+          severity: warning
+        annotations:
+          description: GRPC请求失败率超过1%,当前值为{{ $value | printf "%.2f" }}
+          summary: Etcd high number of failed GRPC requests (instance {{ $labels.instance }})
+      - alert: EtcdHighNumberOfFailedGrpcRequests
+        expr: sum(rate(grpc_server_handled_total{job=~".*etcd-monitor",grpc_code!="OK"}[1m])) BY (grpc_service, grpc_method) / sum(rate(grpc_server_handled_total{job=~".*etcd-monitor"}[1m])) BY (grpc_service, grpc_method) > 0.05
+        for: 2m
+        labels:
+          type: etcd
+          severity: critical
+        annotations:
+          description: GRPC请求失败率超过5%,当前值为{{ $value | printf "%.2f" }}
+          summary: Etcd high number of failed GRPC requests (instance {{ $labels.instance }})
+      - alert: EtcdMemberCommunicationSlow
+        expr: histogram_quantile(0.99, rate(etcd_network_peer_round_trip_time_seconds_bucket{job=~".*etcd-monitor"}[1m])) > 0.15
+        for: 2m
+        labels:
+          type: etcd
+          severity: warning
+        annotations:
+          description: Etcd成员之间通信过慢,当前99%的请求时延为{{ $value | printf "%.2f" }}s,超过了150ms
+          summary: Etcd member communication slow (instance {{ $labels.instance }})
+      - alert: EtcdHighNumberOfFailedProposals
+        expr: increase(etcd_server_proposals_failed_total{job=~".*etcd-monitor"}[1h]) > 5
+        for: 2m
+        labels:
+          type: etcd
+          severity: warning
+        annotations:
+          description: Etcd server在过去一小时内收到超过5个失败的提案
+          summary: Etcd high number of failed proposals (instance {{ $labels.instance }})
+      - alert: EtcdHighFsyncDurations
+        expr: histogram_quantile(0.99, rate(etcd_disk_wal_fsync_duration_seconds_bucket{job=~".*etcd-monitor"}[1m])) > 0.5
+        for: 5m
+        labels:
+          type: etcd
+          severity: warning
+        annotations:
+          description: Etcd的wal日志刷盘延时过高,当前99%的请求时延为{{ $value | printf "%.2f" }}s,超过了500ms
+          summary: Etcd high fsync durations (instance {{ $labels.instance }})
+      - alert: EtcdHighCommitDurations
+        expr: histogram_quantile(0.99, rate(etcd_disk_backend_commit_duration_seconds_bucket{job=~".*etcd-monitor"}[1m])) > 0.25
+        for: 5m
+        labels:
+          type: etcd
+          severity: warning
+        annotations:
+          description: Etcd backend commit时延过高,当前99%的请求时延为{{ $value | printf "%.2f" }}s,超过了250ms
+          summary: Etcd high commit durations (instance {{ $labels.instance }})
