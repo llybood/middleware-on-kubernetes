@@ -1,0 +1,9 @@
+- job_name: minio-monitor
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  bearer_token: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  metrics_path: /minio/v2/metrics/cluster
+  scheme: http
+  static_configs:
+  - targets:
+    - xxx.xxx.xxx.xxx:9000

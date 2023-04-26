@@ -1,0 +1,43 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app.kubernetes.io/component: exporter
+    app.kubernetes.io/name: minio-exporter
+    app.kubernetes.io/part-of: kube-prometheus
+    app.kubernetes.io/version: 1.1.2
+    prometheus: k8s
+    role: alert-rules
+  name: minio-elert-rules
+  namespace: monitoring
+spec:
+  groups:
+  - name: minio-alert-rules
+    rules:
+    - alert: MinioDiskOffline
+      expr: minio_cluster_disk_offline_total{job="minio-monitor"} > 0
+      for: 0m
+      labels:
+        type: minio
+        severity: critical
+      annotations:
+        description: Minio集群{{ $labels.instance }}存在离线磁盘
+        summary: "Minio disk is offline\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+    - alert: MinioNodeOffline
+      expr: minio_cluster_nodes_offline_total{job="minio-monitor"} > 0
+      for: 0m
+      labels:
+        type: minio
+        severity: critical
+      annotations:
+        description: Minio集群{{ $labels.instance }}存在离线节点
+        summary: "Minio minio is offline\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+    - alert: MinioDiskSpaceUsage
+      expr: minio_cluster_capacity_usable_free_bytes{job="minio-monitor"} / minio_cluster_capacity_usable_total_bytes{job="minio-monitor"} * 100 < 10
+      for: 0m
+      labels:
+        type: minio
+        severity: warning
+      annotations:
+        description: Minio集群{{ $labels.instance }})使用率过高,当前值为{{ $value }}
+        summary: "Minio available free space is low (< 10%)\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
