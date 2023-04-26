@@ -1,0 +1,32 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app.kubernetes.io/component: dolphinscheduler-monitor
+    app.kubernetes.io/name: dolphinscheduler-monitor
+    prometheus: k8s
+    role: alert-rules
+  name: dolphinscheduler-alter-rules
+  namespace: monitoring
+spec:
+  groups:
+    - name: dolphinscheduler-monitor
+      rules:
+      - alert: DolphinschedulerMasterDown
+        expr: custom_dolphinscheduler_master_running_status == 0
+        for: 5m
+        labels:
+          type: dolphinscheduler
+          severity: warning
+        annotations:
+          description: dolphinscheduler集群master节点{{ $labels.instance }}掉线
+          summary: dolphinscheduler cluster component down on (instance {{ $labels.instance }})
+      - alert: DolphinschedulerWorkerDown
+        expr: custom_dolphinscheduler_worker_running_status == 0
+        for: 5m
+        labels:
+          type: dolphinscheduler
+          severity: warning
+        annotations:
+          description: dolphinscheduler集群worker节点{{ $labels.instance }}掉线
+          summary: dolphinscheduler cluster component down on (instance {{ $labels.instance }})

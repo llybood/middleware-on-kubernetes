@@ -1,0 +1,13 @@
+- job_name: dolphinscheduler-status-monitor
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  metrics_path: /dolphinscheduler-status-monitor/metrics
+  static_configs:
+  - targets:
+    - xxx.xxx.xxx.xxx:9111
+  metric_relabel_configs:
+  - source_labels: [exported_instance]
+    target_label: instance
+  - regex: ^exported_instance$
+    action: labeldrop
+
