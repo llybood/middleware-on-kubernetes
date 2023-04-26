@@ -1,0 +1,23 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app.kubernetes.io/component: web-monitor
+    app.kubernetes.io/name: web-monitor
+    prometheus: k8s
+    role: alert-rules
+  name: web-alter-rules
+  namespace: monitoring
+spec:
+  groups:
+    - name: web-monitor
+      rules:
+      - alert: WebReturnHttpCode
+        expr: probe_http_status_code{job=~".*web-monitor"} != 200
+        for: 1m
+        labels:
+          type: web
+          severity: critical
+        annotations:
+          description: Web站点{{ $labels.instance }}返回码异常 
+          summary:  Web (instance {{ $labels.instance }}) return http code error

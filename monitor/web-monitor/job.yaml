@@ -1,0 +1,15 @@
+- job_name: 'web-monitor'
+  metrics_path: /probe
+  params:
+    module: [http_2xx]
+  static_configs:
+  - targets:
+    - http://xxx.xxx.xxx.xxx
+    - http://xxx.xxx.xxx.xxx
+  relabel_configs:
+  - source_labels: [__address__]
+    target_label: __param_target
+  - source_labels: [__param_target]
+    target_label: instance 
+  - target_label: __address__
+    replacement: blackbox-exporter.monitoring:19115
