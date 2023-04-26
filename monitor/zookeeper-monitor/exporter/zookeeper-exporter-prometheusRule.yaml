@@ -1,0 +1,50 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app.kubernetes.io/component: zookeeper-exporter
+    app.kubernetes.io/name: zookeeper-exporter
+    prometheus: k8s
+    role: alert-rules
+  name: zookeeper-exporter-rules
+  namespace: monitoring
+spec:
+  groups:
+  - name: zookeeper-exporter
+    rules:
+    - alert: ZookeeperDown
+      expr: zk_up == 0
+      for: 0m
+      labels:
+        type: zookeeper
+        severity: critical
+      annotations:
+        description: Zookeeper节点{{ $labels.zk_host }}宕机
+        summary: Zookeeper Down (zk_host {{ $labels.zk_host }})
+    - alert: ZookeeperMissingLeader
+      expr: sum(zk_server_leader) == 0
+      for: 0m
+      labels:
+        type: zookeeper
+        severity: critical
+      annotations:
+        description: Zookeeper集群目前没有leader节点
+        summary: Zookeeper missing leader (zk_host {{ $labels.zk_host }})
+    - alert: ZookeeperTooManyLeaders
+      expr: sum(zk_server_leader) > 1
+      for: 0m
+      labels:
+        type: zookeeper
+        severity: critical
+      annotations:
+        description: Zookeeper集群存在多个leader节点
+        summary: Zookeeper Too Many Leaders (zk_host {{ $labels.zk_host }})
+    - alert: ZookeeperNotOk
+      expr: zk_ruok == 0
+      for: 3m
+      labels:
+        type: zookeeper
+        severity: warning
+      annotations:
+        description: Zookeeper节点{{ $labels.zk_host }}状态异常
+        summary: Zookeeper Not Ok (zk_host {{ $labels.zk_host }})

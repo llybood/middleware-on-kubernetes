@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zookeeper-exporter
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/component: zookeeper-exporter
+    app.kubernetes.io/name: zookeeper-exporter
+spec:
+  type: ClusterIP
+  ports:
+  - port: 9104
+    protocol: TCP
+    name: zookeeper-monitor-port
+  selector:
+    app.kubernetes.io/name: zookeeper-exporter
