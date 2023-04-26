@@ -1,0 +1,50 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app.kubernetes.io/component: nacos-monitor
+    app.kubernetes.io/name: nacos-monitor
+    prometheus: k8s
+    role: alert-rules
+  name: nacos-alter-rules
+  namespace: monitoring
+spec:
+  groups:
+    - name: nacos-monitor
+      rules:
+      - alert: NacosNoLeader
+        expr: sum(nacos_monitor{name='leaderStatus'}) == 0
+        for: 0m
+        labels:
+          type: nacos
+          severity: critical
+        annotations:
+          description: Nacos集群当前没有Leader节点
+          summary: Nacos no Leader (instance {{ $labels.instance }})
+      - alert: NacosLeaderSendBeatFailed
+        expr: increase(nacos_exception_total{name="leaderSendBeatFailed"}[1m]) > 0
+        for: 2m
+        labels:
+          type: nacos
+          severity: warning
+        annotations:
+          description: Nacos集群naming leader发送心跳异常
+          summary: Nacos cluster naming leader sends abnormal heartbeat (instance {{ $labels.instance }})
+      - alert: NacosUsedHighMemory
+        expr: sum by(instance) (jvm_memory_used_bytes{area="heap",job=~".*nacos-monitor"}) / sum by(instance) (jvm_memory_max_bytes{area="heap",job=~".*nacos-monitor"}) * 100 > 80
+        for: 5m
+        labels:
+          type: nacos
+          severity: warning
+        annotations:
+          description: Nacos集群节点{{ $labels.instance }}内存使用过高,当前值为{{ $value | printf "%.2f" }}%
+          summary: Nacos cluster Memory usage is too high (instance {{ $labels.instance }})
+      - alert: NacosNamingFailedPush
+        expr: increase(nacos_monitor{module="naming",name="failedPush"}[1m]) > 0
+        for: 5m
+        labels:
+          type: nacos
+          severity: warning
+        annotations:
+          description: Nacos集群节点{{ $labels.instance }}最近5m推送失败次数过多,当前值为{{ $value }}
+          summary: Nacos cluster node push failed too many times (instance {{ $labels.instance }})
