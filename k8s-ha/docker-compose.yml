@@ -8,14 +8,13 @@ services:
       - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
     network_mode: host
   keepalived:
-    image: osixia/keepalived:2.0.20
+    image: llybood/keepalived:v2.2.7-alpine
     restart: always
     container_name: keepalived
-    command: [--copy-service]
     depends_on:
       - HAProxy
     volumes:
-      - ./keepalived.conf:/container/service/keepalived/assets/keepalived.conf
+      - ./keepalived.conf:/etc/keepalived/keepalived.conf
     network_mode: host
     cap_add:
     - NET_ADMIN
