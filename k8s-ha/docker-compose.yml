@@ -1,7 +1,7 @@
 version: '3.3'
 services:
   HAProxy:
-    image: haproxy:2.4.0-alpine
+    image: haproxy:2.6.13
     restart: always
     container_name: HAProxy
     volumes:
