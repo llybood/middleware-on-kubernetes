@@ -1,0 +1,42 @@
+# Kubernetes: manifests for static pods are in /etc/kubernetes/manifests
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kube-keepalived
+  namespace: kube-system
+annotations:
+  scheduler.alpha.kubernetes.io/critical-pod: ""
+labels:
+  app.kubernetes.io/name: kube-keepalived
+  app.kubernetes.io/instance: kube-keeplived
+spec:
+  containers:
+  - name: keepalived
+    image: llybood/keepalived:v2.2.7-alpine
+    imagePullPolicy: IfNotPresent
+    livenessProbe:
+      failureThreshold: 5
+      exec:
+        command: ["pidof", "keepalived"]
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      timeoutSeconds: 3
+    securityContext:
+      privileged: true
+      capabilities:
+        add:
+        - NET_BROADCAST
+        - NET_ADMIN
+        - NET_RAW
+    resources:
+    volumeMounts:
+    - mountPath: /etc/keepalived/keepalived.conf
+      name: kube-keepalived-config
+      readOnly: true
+  hostNetwork: true
+  priorityClassName: system-node-critical
+  volumes:
+  - hostPath:
+      path: /etc/keepalived/keepalived.conf 
+      type: FileOrCreate
+    name: kube-keepalived-config

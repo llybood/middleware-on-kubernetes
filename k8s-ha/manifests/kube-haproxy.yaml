@@ -1,0 +1,38 @@
+# Kubernetes: manifests for static pods are in /etc/kubernetes/manifests
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kube-haproxy
+  namespace: kube-system
+annotations:
+  scheduler.alpha.kubernetes.io/critical-pod: ""
+labels:
+  app.kubernetes.io/name: kube-haproxy
+  app.kubernetes.io/instance: kube-haproxy
+spec:
+  containers:
+  - name: haproxy
+    image: haproxy:2.6.13
+    imagePullPolicy: IfNotPresent
+    livenessProbe:
+      failureThreshold: 8
+      httpGet:
+        host: localhost
+        path: /livez
+        port: 9443
+        scheme: HTTPS
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 15
+    resources:
+    volumeMounts:
+    - mountPath: /usr/local/etc/haproxy/haproxy.cfg
+      name: kube-haproxy-config
+      readOnly: true
+  hostNetwork: true
+  priorityClassName: system-node-critical
+  volumes:
+  - hostPath:
+      path: /etc/haproxy/haproxy.cfg
+      type: FileOrCreate
+    name: kube-haproxy-config
